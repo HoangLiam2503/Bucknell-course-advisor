@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Northbridge University — Course registration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone:#F3F4F0; --surface:#FFFFFF; --line:#D9DCD4; --line-soft:#E8EAE4;
+    --ink:#1F2A44; --muted:#5F6B7A;
+    --burgundy:#7A2E3B; --burgundy-soft:#F4E8EA;
+    --green:#2F6B4F; --green-soft:#E4F0E9;
+    --amber:#9A6B12; --amber-soft:#F7EED8;
+    --rust:#A4452B; --rust-soft:#F6E5DF;
+    --teal:#1F6F7A; --teal-soft:#E1EFF1;
+    --focus:#2B5DAE;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:var(--stone); color:var(--ink); font-family:'Public Sans',sans-serif; font-size:14px; -webkit-font-smoothing:antialiased;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  .shell{max-width:1240px; margin:0 auto; padding:28px 28px 60px;}
+  @media(max-width:640px){ .shell{padding:18px 14px 48px;} }
+
+  /* Header + profile */
+  .institution{font-size:13px; color:var(--muted);}
+  h1{font-family:'Newsreader',serif; font-weight:500; font-size:34px; margin:4px 0 22px; letter-spacing:-0.01em;}
+  .profile{
+    background:var(--surface); border:1px solid var(--line); border-radius:8px;
+    padding:18px 22px; display:grid; grid-template-columns:1.4fr 1fr 1fr 1.6fr; gap:18px; margin-bottom:24px;
+  }
+  @media(max-width:900px){ .profile{grid-template-columns:1fr 1fr;} }
+  .profile .k{font-size:12px; color:var(--muted); margin-bottom:3px;}
+  .profile .v{font-size:15px; font-weight:500;}
+  .profile .v.big{font-family:'Newsreader',serif; font-size:24px; font-weight:500;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;}
+  .chip{font-size:12px; padding:3px 9px; border-radius:12px; background:var(--stone); border:1px solid var(--line-soft);}
+
+  .grid{display:grid; grid-template-columns:1fr 440px; gap:24px; align-items:start;}
+  @media(max-width:1000px){ .grid{grid-template-columns:1fr;} }
+
+  h2{font-family:'Newsreader',serif; font-weight:500; font-size:22px; margin:0 0 12px;}
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:18px 20px;}
+  .panel + .panel{margin-top:18px;}
+
+  /* Catalog */
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+  .toolbar input[type=text]{flex:1; min-width:180px; padding:9px 12px; border:1px solid var(--line); border-radius:6px; font:inherit; color:var(--ink);}
+  .filter{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); padding:0 4px;}
+  .tagbar{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;}
+  .tagbtn{font-size:12px; padding:5px 11px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer;}
+  .tagbtn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  .course{border-top:1px solid var(--line-soft); padding:14px 2px;}
+  .course:first-of-type{border-top:none;}
+  .course-head{display:flex; align-items:flex-start; gap:12px; justify-content:space-between;}
+  .course-title{font-family:'Newsreader',serif; font-size:18px; font-weight:500; line-height:1.3;}
+  .course-title .code{color:var(--muted); font-family:'Public Sans',sans-serif; font-size:12.5px; font-weight:500; margin-right:8px; vertical-align:middle;}
+  .course-meta{font-size:12.5px; color:var(--muted); margin-top:4px;}
+  .badge{font-size:11.5px; font-weight:500; padding:3px 9px; border-radius:4px; white-space:nowrap;}
+  .badge.eligible{background:var(--green-soft); color:var(--green);}
+  .badge.ineligible{background:var(--stone); color:var(--muted); border:1px solid var(--line-soft);}
+  .badge.full{background:var(--amber-soft); color:var(--amber);}
+  .badge.conflict{background:var(--rust-soft); color:var(--rust);}
+  .badge.taken{background:var(--teal-soft); color:var(--teal);}
+  .course-actions{display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;}
+  .reasons{font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:6px; display:none;}
+  .reasons.show{display:block;}
+  .reasons li{margin:2px 0;}
+  .reasons ul{margin:0; padding-left:18px;}
+  .link{background:none; border:none; padding:0; color:var(--muted); font-size:12.5px; cursor:pointer; text-decoration:underline; text-underline-offset:3px;}
+
+  .btn{font-size:13px; font-weight:500; padding:8px 14px; border-radius:6px; border:1px solid transparent; cursor:pointer;}
+  .btn-primary{background:var(--burgundy); color:#fff;}
+  .btn-secondary{background:var(--surface); color:var(--ink); border-color:var(--line);}
+  .btn-danger{background:var(--surface); color:var(--rust); border-color:var(--rust-soft);}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+
+  /* Plan */
+  .credits{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;}
+  .credits .n{font-family:'Newsreader',serif; font-size:30px; font-weight:500;}
+  .credits .cap{color:var(--muted); font-size:13px;}
+  .bar{height:6px; background:var(--stone); border-radius:3px; overflow:hidden; margin-bottom:14px;}
+  .bar i{display:block; height:100%; background:var(--burgundy); width:0; transition:width .25s ease;}
+  .plan-list{display:flex; flex-direction:column; gap:8px;}
+  .plan-item{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; padding:8px 10px; border:1px solid var(--line-soft); border-radius:6px;}
+  .plan-item b{font-weight:500;}
+  .plan-item small{color:var(--muted); display:block;}
+  .empty{color:var(--muted); font-size:13px; font-style:italic;}
+
+  /* Timetable */
+  .tt{display:grid; grid-template-columns:36px repeat(5,1fr); gap:0; margin-top:16px; border:1px solid var(--line-soft); border-radius:6px; overflow:hidden;}
+  .tt .dh{font-size:11.5px; color:var(--muted); text-align:center; padding:6px 0; border-bottom:1px solid var(--line-soft); background:var(--stone);}
+  .tt .th{background:var(--stone); border-bottom:1px solid var(--line-soft);}
+  .tt .col{position:relative; height:var(--tt-h); border-left:1px solid var(--line-soft);
+    background:repeating-linear-gradient(to bottom, transparent, transparent calc(var(--tt-h) / 12 - 1px), var(--line-soft) calc(var(--tt-h) / 12 - 1px), var(--line-soft) calc(var(--tt-h) / 12));}
+  .tt .times{position:relative; height:var(--tt-h);}
+  .tt .times span{position:absolute; left:0; right:4px; text-align:right; font-size:10px; color:var(--muted); transform:translateY(-50%);}
+  .blk{position:absolute; left:2px; right:2px; border-radius:4px; padding:3px 5px; font-size:10.5px; line-height:1.25; overflow:hidden;
+    background:var(--burgundy-soft); color:var(--burgundy); border:1px solid transparent;}
+  .blk b{display:block; font-weight:600;}
+  .blk.proposed{background:transparent; border:1.5px dashed var(--teal); color:var(--teal);}
+
+  /* Proposal */
+  .proposal{border-left:3px solid var(--teal); padding-left:14px;}
+  .proposal .why{font-size:12.5px; color:var(--muted); margin:3px 0 0;}
+  .proposal-item{padding:8px 0; border-bottom:1px solid var(--line-soft);}
+  .proposal-item:last-child{border-bottom:none;}
+  .proposal-foot{display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap;}
+  .skipped{font-size:12px; color:var(--muted); margin-top:10px;}
+
+  /* Log */
+  .log{display:flex; flex-direction:column; gap:8px; max-height:300px; overflow:auto;}
+  .log-entry{font-size:12.5px; line-height:1.45; border-left:2px solid var(--line-soft); padding-left:10px;}
+  .tag{display:inline-block; font-size:11px; padding:1px 7px; border-radius:3px; margin-right:6px; font-weight:500;}
+  .tag.you{background:var(--stone); border:1px solid var(--line-soft); color:var(--muted);}
+  .tag.agent{background:var(--teal-soft); color:var(--teal);}
+  .log-entry time{color:var(--muted); font-size:11px; margin-left:6px;}
+
+  .status{margin-top:22px; padding-top:14px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); display:flex; gap:8px; align-items:center;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0;}
+  .dot.on{background:var(--green);}
+
+  /* Modal */
+  .overlay{position:fixed; inset:0; background:rgba(31,42,68,.45); display:none; align-items:center; justify-content:center; padding:20px; z-index:10;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--surface); border-radius:10px; max-width:520px; width:100%; padding:24px 26px;}
+  .modal h3{font-family:'Newsreader',serif; font-weight:500; font-size:22px; margin:0 0 6px;}
+  .modal p{margin:0 0 14px; color:var(--muted); line-height:1.5;}
+  .modal .req{font-size:12.5px; color:var(--teal); background:var(--teal-soft); padding:8px 10px; border-radius:6px; margin-bottom:14px;}
+  .modal ul{margin:0 0 14px; padding-left:18px; line-height:1.6;}
+  .modal-actions{display:flex; gap:8px; justify-content:flex-end;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="institution">Northbridge University</div>
+  <h1>Fall 2026 course registration</h1>
+
+  <section class="profile" id="profile"></section>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>Course catalog</h2>
+        <div class="toolbar">
+          <input type="text" id="q" placeholder="Search by code, title or topic">
+          <label class="filter"><input type="checkbox" id="onlyEligible"> Eligible only</label>
+        </div>
+        <div class="tagbar" id="tagbar"></div>
+        <div id="catalog"></div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px">
+          <h2 style="margin:0">Your plan</h2>
+          <button class="btn btn-secondary" id="planBtn">Plan my semester</button>
+        </div>
+        <div class="credits"><span class="n" id="credN">0</span><span class="cap">of <span id="credMax">15</span> credits</span></div>
+        <div class="bar"><i id="credBar"></i></div>
+        <div class="plan-list" id="planList"></div>
+        <div class="tt" id="tt"></div>
+      </div>
+
+      <div class="panel" id="proposalPanel" style="display:none">
+        <h2>Proposed schedule</h2>
+        <div class="proposal" id="proposal"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Activity</h2>
+        <div class="log" id="log"><p class="empty">Nothing yet. Search, register, or ask your AI advisor to plan your semester.</p></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="status"><span class="dot" id="mcpDot"></span><span id="mcpText">Checking WebMCP support…</span></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="mTitle"></h3>
+    <div class="req" id="mReq" style="display:none"></div>
+    <p id="mBody"></p>
+    <ul id="mList"></ul>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="mCancel">Cancel</button>
+      <button class="btn btn-primary" id="mConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script type="module">
+// Optional polyfill so the tool logic can be exercised outside ChatGPT / Chrome-with-flag.
+try {
+  if (!('modelContext' in document)) {
+    const { initializeWebMCPPolyfill } = await import('https://esm.sh/@mcp-b/webmcp-polyfill');
+    initializeWebMCPPolyfill();
+  }
+} catch (e) { console.warn('WebMCP polyfill unavailable; native support only.', e); }
+
+const A = window.Advisor;
+const state = {
+  profile: structuredClone(A.DEFAULT_PROFILE),
+  registered: [],
+  proposal: null,
+  activeTag: null,
+};
+const $ = (id) => document.getElementById(id);
+
+// ---------- Rendering ----------
+function renderProfile() {
+  const p = state.profile;
+  $('profile').innerHTML = `
+    <div><div class="k">Student</div><div class="v">${p.name}</div><div class="course-meta">${p.major}, ${p.year} · ${p.studentId}</div></div>
+    <div><div class="k">GPA</div><div class="v big">${p.gpa.toFixed(2)}</div></div>
+    <div><div class="k">Credits completed</div><div class="v big">${p.creditsCompleted}</div></div>
+    <div><div class="k">Interests and preferences</div>
+      <div class="chips">${p.interests.map(t => `<span class="chip">${A.TAG_LABEL[t] || t}</span>`).join('')}
+      <span class="chip">Max ${p.maxCredits} credits</span><span class="chip">No classes before ${A.fmt(A.toMin(p.earliestStart))}</span>
+      ${p.avoidDays.length ? `<span class="chip">No ${p.avoidDays.join('/')} classes</span>` : ''}</div></div>`;
+}
+
+function renderTags() {
+  const tags = Object.keys(A.TAG_LABEL);
+  $('tagbar').innerHTML = tags.map(t => `<button class="tagbtn ${state.activeTag === t ? 'active' : ''}" data-tag="${t}">${A.TAG_LABEL[t]}</button>`).join('');
+}
+
+function renderCatalog() {
+  const results = A.searchCourses(state.profile, state.registered, {
+    query: $('q').value, tag: state.activeTag, onlyEligible: $('onlyEligible').checked,
+  });
+  if (!results.length) { $('catalog').innerHTML = '<p class="empty">No courses match. Try a different search or clear the filters.</p>'; return; }
+  $('catalog').innerHTML = results.map(r => {
+    const c = r.course;
+    const inPlan = state.registered.some(x => x.code === c.code);
+    const label = { eligible: 'Eligible', ineligible: 'Not eligible', full: 'Full (waitlist)', conflict: 'Time conflict', taken: inPlan ? 'In your plan' : 'Completed' }[r.status];
+    const action = inPlan
+      ? `<button class="btn btn-danger" data-drop="${c.code}">Drop</button>`
+      : `<button class="btn btn-primary" data-register="${c.code}" ${r.eligible ? '' : 'disabled'}>Register</button>`;
+    return `
+      <div class="course" id="course-${c.code}">
+        <div class="course-head">
+          <div>
+            <div class="course-title"><span class="code">${c.code}</span>${c.title}</div>
+            <div class="course-meta">${c.credits} credits · ${A.describeSchedule(c)} · ${c.dept} · ${c.seats > 0 ? c.seats + ' seats open' : 'no seats'}</div>
+          </div>
+          <span class="badge ${r.status}">${label}</span>
+        </div>
+        <div class="course-actions">${action}<button class="link" data-why="${c.code}">Why?</button></div>
+        <div class="reasons" id="why-${c.code}"><ul>${[...r.blockers, ...r.reasons].map(x => `<li>${x}</li>`).join('')}</ul></div>
+      </div>`;
+  }).join('');
+}
+
+function renderPlan() {
+  const total = state.registered.reduce((s, c) => s + c.credits, 0);
+  $('credN').textContent = total;
+  $('credMax').textContent = state.profile.maxCredits;
+  $('credBar').style.width = Math.min(100, (total / state.profile.maxCredits) * 100) + '%';
+  $('planList').innerHTML = state.registered.length
+    ? state.registered.map(c => `<div class="plan-item"><div><b>${c.code}</b> ${c.title}<small>${c.credits} cr · ${A.describeSchedule(c)}</small></div><button class="btn btn-danger" data-drop="${c.code}">Drop</button></div>`).join('')
+    : '<p class="empty">No courses yet. Register from the catalog or ask your advisor to build a plan.</p>';
+  renderTimetable();
+}
+
+function renderTimetable() {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const START = 8 * 60, END = 20 * 60, H = 360; // 12h → 360px
+  const scale = H / (END - START);
+  const blocks = (list, cls) => list.flatMap(c => c.days.map(d => ({ d, c, cls })));
+  const all = [...blocks(state.registered, ''), ...blocks(state.proposal ? state.proposal.plan : [], 'proposed')];
+  const cols = days.map(d => `<div class="col">${all.filter(b => b.d === d).map(b => {
+    const top = (A.toMin(b.c.start) - START) * scale, h = (A.toMin(b.c.end) - A.toMin(b.c.start)) * scale;
+    return `<div class="blk ${b.cls}" style="top:${top}px;height:${h}px" title="${b.c.title}"><b>${b.c.code}</b>${A.fmt(A.toMin(b.c.start))}</div>`;
+  }).join('')}</div>`).join('');
+  const times = [8, 10, 12, 14, 16, 18].map(h => `<span style="top:${(h * 60 - START) * scale}px">${h > 12 ? h - 12 : h}${h >= 12 ? 'p' : 'a'}</span>`).join('');
+  $('tt').style.setProperty('--tt-h', H + 'px');
+  $('tt').innerHTML = `<div class="th"></div>${days.map(d => `<div class="dh">${d}</div>`).join('')}<div class="times">${times}</div>${cols}`;
+}
+
+function renderProposal() {
+  const pr = state.proposal;
+  $('proposalPanel').style.display = pr ? 'block' : 'none';
+  if (!pr) return;
+  const con = pr.constraints;
+  $('proposal').innerHTML = `
+    <p class="why">Up to ${con.maxCredits} credits, no classes before ${A.fmt(A.toMin(con.earliestStart))}${con.avoidDays.length ? ', no ' + con.avoidDays.join('/') : ''}, prioritizing ${con.priorities.map(t => A.TAG_LABEL[t] || t).join(', ')}.</p>
+    ${pr.explanation.map(e => `<div class="proposal-item"><b>${e.code}</b> ${e.title} <span class="course-meta">${e.credits} cr · ${A.describeSchedule(A.findCourse(e.code))}</span><p class="why">${e.why}</p></div>`).join('')}
+    <div class="proposal-foot">
+      <span><b>${pr.totalCredits} credits</b> across ${pr.plan.length} courses</span>
+      <button class="btn btn-primary" id="acceptProposal" ${pr.plan.length ? '' : 'disabled'}>Register all ${pr.plan.length}</button>
+      <button class="btn btn-secondary" id="clearProposal">Dismiss</button>
+    </div>
+    ${pr.skipped.length ? `<div class="skipped">Considered but skipped: ${pr.skipped.map(s => `${s.code} (${s.why})`).join('; ')}.</div>` : ''}`;
+  $('acceptProposal').onclick = () => requestRegistration(pr.plan.map(c => c.code), 'human');
+  $('clearProposal').onclick = () => { state.proposal = null; log('human', 'dismissed the proposed schedule.'); renderProposal(); renderTimetable(); };
+}
+
+function renderAll() { renderProfile(); renderTags(); renderCatalog(); renderPlan(); renderProposal(); }
+
+function log(actor, msg) {
+  const empty = $('log').querySelector('.empty'); if (empty) empty.remove();
+  const el = document.createElement('div'); el.className = 'log-entry';
+  const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  el.innerHTML = `<span class="tag ${actor === 'agent' ? 'agent' : 'you'}">${actor === 'agent' ? 'Advisor agent' : 'You'}</span>${msg}<time>${t}</time>`;
+  $('log').prepend(el);
+}
+
+// ---------- Confirmation (human-in-the-loop for sensitive actions) ----------
+let pending = null;
+function confirmDialog({ title, body, items, requestedBy }) {
+  return new Promise(resolve => {
+    pending = resolve;
+    $('mTitle').textContent = title;
+    $('mBody').textContent = body;
+    $('mList').innerHTML = items.map(i => `<li>${i}</li>`).join('');
+    $('mReq').style.display = requestedBy === 'agent' ? 'block' : 'none';
+    $('mReq').textContent = 'Requested by your AI advisor. Nothing changes until you confirm.';
+    $('overlay').classList.add('show');
+    $('mConfirm').focus();
+  });
+}
+function closeDialog(result) { $('overlay').classList.remove('show'); if (pending) { pending(result); pending = null; } }
+$('mCancel').onclick = () => closeDialog(false);
+$('mConfirm').onclick = () => closeDialog(true);
+$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeDialog(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && pending) closeDialog(false); });
+
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise(res => setTimeout(() => res('timeout'), ms))]);
+}
+
+// ---------- Actions shared by UI and tools ----------
+async function requestRegistration(codes, actor) {
+  const courses = codes.map(A.findCourse).filter(Boolean);
+  if (!courses.length) return 'No valid course codes were provided.';
+  const checks = courses.map(c => A.evaluate(c, state.profile, state.registered));
+  const blocked = checks.filter(r => !r.eligible);
+  if (blocked.length) {
+    const msg = blocked.map(r => `${r.course.code}: ${r.blockers.join(' ')}`).join(' ');
+    log(actor, `tried to register ${blocked.map(r => r.course.code).join(', ')} but registration was blocked.`);
+    return `Cannot register — ${msg}`;
+  }
+  const newTotal = state.registered.reduce((s, c) => s + c.credits, 0) + courses.reduce((s, c) => s + c.credits, 0);
+  if (newTotal > state.profile.maxCredits) {
+    return `This would put the plan at ${newTotal} credits, above the ${state.profile.maxCredits}-credit limit. Drop a course or raise the limit first.`;
+  }
+  log(actor, `requested registration for ${courses.map(c => c.code).join(', ')} — waiting for student confirmation.`);
+  const ok = await withTimeout(confirmDialog({
+    title: courses.length === 1 ? `Register for ${courses[0].code}?` : `Register for ${courses.length} courses?`,
+    body: `Your plan will be ${newTotal} of ${state.profile.maxCredits} credits after this change.`,
+    items: courses.map(c => `${c.code} ${c.title} — ${c.credits} cr, ${A.describeSchedule(c)}`),
+    requestedBy: actor,
+  }), 120000);
+  if (ok === 'timeout') { closeDialog(false); log('human', 'did not respond to the confirmation request.'); return 'No confirmation received within two minutes. Nothing was changed.'; }
+  if (!ok) { log('human', `declined to register ${courses.map(c => c.code).join(', ')}.`); return 'The student declined. Nothing was changed.'; }
+  courses.forEach(c => { c.seats -= 1; state.registered.push(c); });
+  if (state.proposal) { state.proposal = null; }
+  log('human', `confirmed registration for ${courses.map(c => c.code).join(', ')}.`);
+  renderAll();
+  return `Registered ${courses.map(c => c.code).join(', ')}. The plan is now ${state.registered.reduce((s, c) => s + c.credits, 0)} credits.`;
+}
+
+async function requestDrop(code, actor) {
+  const c = state.registered.find(x => x.code === String(code).toUpperCase());
+  if (!c) return `${code} is not in the plan.`;
+  log(actor, `requested to drop ${c.code} — waiting for student confirmation.`);
+  const ok = await withTimeout(confirmDialog({
+    title: `Drop ${c.code}?`, body: 'This removes the course from your plan and releases your seat.',
+    items: [`${c.code} ${c.title} — ${c.credits} cr`], requestedBy: actor,
+  }), 120000);
+  if (ok === 'timeout') { closeDialog(false); return 'No confirmation received within two minutes. Nothing was changed.'; }
+  if (!ok) { log('human', `kept ${c.code}.`); return 'The student declined. Nothing was changed.'; }
+  state.registered = state.registered.filter(x => x.code !== c.code); c.seats += 1;
+  log('human', `confirmed dropping ${c.code}.`);
+  renderAll();
+  return `Dropped ${c.code}.`;
+}
+
+function doBuildSchedule(constraints, actor) {
+  const result = A.buildSchedule(state.profile, state.registered, constraints);
+  state.proposal = result;
+  log(actor, `built a proposed schedule: ${result.plan.map(c => c.code).join(', ') || 'no courses fit'} (${result.totalCredits} cr).`);
+  renderProposal(); renderTimetable();
+  return result;
+}
+
+function doUpdatePreferences(prefs, actor) {
+  const p = state.profile; const changed = [];
+  if (Array.isArray(prefs.interests) && prefs.interests.length) { p.interests = prefs.interests.map(x => String(x).toLowerCase()).filter(x => A.TAG_LABEL[x]); changed.push('interests'); }
+  if (prefs.maxCredits) { p.maxCredits = Number(prefs.maxCredits); changed.push('credit limit'); }
+  if (prefs.earliestStart) { p.earliestStart = prefs.earliestStart; changed.push('earliest start'); }
+  if (prefs.latestEnd) { p.latestEnd = prefs.latestEnd; changed.push('latest end'); }
+  if (Array.isArray(prefs.avoidDays)) { p.avoidDays = prefs.avoidDays; changed.push('days to avoid'); }
+  log(actor, `updated preferences: ${changed.join(', ') || 'nothing changed'}.`);
+  renderAll();
+  return `Updated ${changed.join(', ') || 'nothing'}.`;
+}
+
+// ---------- UI wiring ----------
+$('planBtn').addEventListener('click', () => doBuildSchedule({}, 'human'));
+$('q').addEventListener('input', renderCatalog);
+$('onlyEligible').addEventListener('change', renderCatalog);
+$('tagbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-tag]'); if (!b) return;
+  state.activeTag = state.activeTag === b.dataset.tag ? null : b.dataset.tag; renderTags(); renderCatalog();
+});
+document.addEventListener('click', e => {
+  const reg = e.target.closest('[data-register]'); if (reg) return requestRegistration([reg.dataset.register], 'human');
+  const drop = e.target.closest('[data-drop]'); if (drop) return requestDrop(drop.dataset.drop, 'human');
+  const why = e.target.closest('[data-why]'); if (why) $('why-' + why.dataset.why).classList.toggle('show');
+});
+renderAll();
+
+// ---------- WebMCP tools ----------
+const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
+const summarize = (r) => ({
+  code: r.course.code, title: r.course.title, credits: r.course.credits, schedule: A.describeSchedule(r.course),
+  seatsOpen: r.course.seats, status: r.status, eligible: r.eligible, reasons: r.reasons, blockers: r.blockers,
+});
+
+async function registerTools() {
+  if (!document.modelContext) {
+    $('mcpText').textContent = 'WebMCP is not available in this browser. Open this page in the ChatGPT desktop app’s built-in browser, or Chrome with chrome://flags/#enable-webmcp-testing enabled.';
+    return;
+  }
+  const mc = document.modelContext;
+  try {
+    await mc.registerTool({
+      name: 'get_student_profile',
+      description: 'Return the signed-in student’s academic profile: major, year, GPA, completed courses, interests, career goal, credit limit and scheduling preferences. Call this first to personalize advice.',
+      inputSchema: { type: 'object', properties: {} },
+      execute: async () => { log('agent', 'read the student profile.'); return text({ ...state.profile, registeredCourses: state.registered.map(c => c.code) }); },
+    });
+
+    await mc.registerTool({
+      name: 'search_courses',
+      description: 'Search the Fall 2026 catalog. Each result includes an eligibility status (eligible, ineligible, full, conflict, taken) with plain-language reasons based on the student’s prerequisites, GPA, seat availability and current plan.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Free-text match on code, title or description.' },
+          tag: { type: 'string', enum: Object.keys(A.TAG_LABEL), description: 'Topic area filter, e.g. ai, security, web, data, core.' },
+          department: { type: 'string', description: 'Department name filter, e.g. "Computer Science".' },
+          onlyEligible: { type: 'boolean', description: 'Return only courses the student can register for right now.' },
+        },
+      },
+      execute: async (args = {}) => {
+        const results = A.searchCourses(state.profile, state.registered, args);
+        $('q').value = args.query || ''; state.activeTag = args.tag || null; $('onlyEligible').checked = !!args.onlyEligible; renderTags(); renderCatalog();
+        log('agent', `searched the catalog (${[args.query && `"${args.query}"`, args.tag, args.onlyEligible && 'eligible only'].filter(Boolean).join(', ') || 'all courses'}) — ${results.length} results.`);
+        return text(results.map(summarize));
+      },
+    });
+
+    await mc.registerTool({
+      name: 'check_eligibility',
+      description: 'Detailed eligibility report for one course: prerequisites, GPA requirement, open seats, and time conflicts with the student’s current plan.',
+      inputSchema: { type: 'object', properties: { courseCode: { type: 'string', description: 'Course code such as CS360.' } }, required: ['courseCode'] },
+      execute: async ({ courseCode }) => {
+        const c = A.findCourse(courseCode); if (!c) return text(`No course with code ${courseCode} in the Fall 2026 catalog.`);
+        const r = A.evaluate(c, state.profile, state.registered);
+        const el = $('why-' + c.code); if (el) { el.classList.add('show'); $('course-' + c.code).scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        log('agent', `checked eligibility for ${c.code}: ${r.status}.`);
+        return text(summarize(r));
+      },
+    });
+
+    await mc.registerTool({
+      name: 'build_schedule',
+      description: 'Propose an optimized semester schedule from the student’s constraints: credit cap, earliest start time, latest end time, priority topics and days to avoid. Only eligible, non-conflicting courses are used. The proposal is shown on the page but NOT registered — call register_course with the returned codes to enroll after the student agrees.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          maxCredits: { type: 'integer', minimum: 1, maximum: 21, description: 'Credit cap for the semester (default: the student’s preference).' },
+          earliestStart: { type: 'string', description: '24h time like "10:00"; no classes start before this.' },
+          latestEnd: { type: 'string', description: '24h time like "17:00"; no classes end after this.' },
+          priorities: { type: 'array', items: { type: 'string', enum: Object.keys(A.TAG_LABEL) }, description: 'Topic areas to prioritize, most important first.' },
+          avoidDays: { type: 'array', items: { type: 'string', enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] }, description: 'Weekdays to keep free.' },
+        },
+      },
+      execute: async (args = {}) => {
+        const r = doBuildSchedule(args, 'agent');
+        return text({ totalCredits: r.totalCredits, courses: r.explanation.map(e => ({ ...e, schedule: A.describeSchedule(A.findCourse(e.code)) })), skipped: r.skipped, note: 'Shown as a proposal on the page. Use register_course to enroll once the student approves.' });
+      },
+    });
+
+    await mc.registerTool({
+      name: 'register_course',
+      description: 'Register the student for one or more courses. This is a sensitive action: the page shows a confirmation dialog and the student must click Confirm before anything changes. The result tells you whether they confirmed or declined.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          courseCodes: { type: 'array', items: { type: 'string' }, description: 'One or more course codes, e.g. ["CS360", "CS380"].' },
+        },
+        required: ['courseCodes'],
+      },
+      annotations: { destructiveHint: false, idempotentHint: false },
+      execute: async ({ courseCodes }) => text(await requestRegistration(courseCodes, 'agent')),
+    });
+
+    await mc.registerTool({
+      name: 'drop_course',
+      description: 'Drop a course from the student’s plan. Sensitive action: requires the student to click Confirm on the page.',
+      inputSchema: { type: 'object', properties: { courseCode: { type: 'string' } }, required: ['courseCode'] },
+      annotations: { destructiveHint: true },
+      execute: async ({ courseCode }) => text(await requestDrop(courseCode, 'agent')),
+    });
+
+    await mc.registerTool({
+      name: 'get_schedule',
+      description: 'Return the courses currently in the student’s plan with total credits and weekly meeting times.',
+      inputSchema: { type: 'object', properties: {} },
+      execute: async () => {
+        log('agent', 'read the current plan.');
+        return text({ totalCredits: state.registered.reduce((s, c) => s + c.credits, 0), maxCredits: state.profile.maxCredits,
+          courses: state.registered.map(c => ({ code: c.code, title: c.title, credits: c.credits, schedule: A.describeSchedule(c) })) });
+      },
+    });
+
+    await mc.registerTool({
+      name: 'update_preferences',
+      description: 'Update the student’s scheduling preferences so future recommendations respect them: interests, credit limit, earliest start, latest end, days to avoid.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          interests: { type: 'array', items: { type: 'string', enum: Object.keys(A.TAG_LABEL) } },
+          maxCredits: { type: 'integer', minimum: 1, maximum: 21 },
+          earliestStart: { type: 'string', description: '24h time like "10:00".' },
+          latestEnd: { type: 'string', description: '24h time like "18:00".' },
+          avoidDays: { type: 'array', items: { type: 'string', enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] } },
+        },
+      },
+      execute: async (args = {}) => text(doUpdatePreferences(args, 'agent')),
+    });
+
+    $('mcpDot').className = 'dot on';
+    $('mcpText').textContent = 'WebMCP ready — 8 site tools registered. Your AI advisor can search, check eligibility, plan a schedule, and request registration (you always confirm).';
+  } catch (err) {
+    $('mcpText').textContent = 'Could not register WebMCP tools: ' + err.message; console.error(err);
+  }
+}
+registerTools();
+</script>
+</body>
+</html>
