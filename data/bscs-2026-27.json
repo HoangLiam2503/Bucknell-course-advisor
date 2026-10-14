@@ -1,0 +1,56 @@
+{
+  "program": "Bachelor of Science in Computer Science",
+  "catalogYear": "2026-2027",
+  "totalDegreeCredits": 32,
+  "majorRequirementCredits": 17.5,
+  "source": "https://coursecatalog.bucknell.edu/collegeofartsandsciencescurricula/areasofstudy/computersciencecsci/",
+  "requirements": [
+    { "id": "csci-201", "label": "Computer Science Seminar", "credits": 0.5, "courses": ["CSCI201"] },
+    { "id": "csci-203", "label": "Introduction to Computer Science", "credits": 1, "courses": ["CSCI203"], "notes": "AP Computer Science A may fulfill this requirement; approved placement into CSCI204 permits a later CSCI elective substitution." },
+    { "id": "csci-204", "label": "Data Structures & Algorithms", "credits": 1, "courses": ["CSCI204"] },
+    { "id": "csci-205", "label": "Software Engineering and Design", "credits": 1, "courses": ["CSCI205"] },
+    { "id": "csci-306", "label": "Computer Systems", "credits": 1, "courses": ["CSCI306"] },
+    { "id": "csci-307", "label": "Computer Networks and Security", "credits": 0.5, "courses": ["CSCI307"] },
+    { "id": "csci-308", "label": "Programming Language Design", "credits": 1, "courses": ["CSCI308"] },
+    { "id": "csci-311", "label": "Algorithm Design & Analysis", "credits": 1, "courses": ["CSCI311"] },
+    { "id": "csci-315", "label": "Operating Systems Design", "credits": 1, "courses": ["CSCI315"] },
+    { "id": "csci-341", "label": "Theory of Computation", "credits": 1, "courses": ["CSCI341"] },
+    { "id": "csci-345", "label": "Computers and Society", "credits": 1, "courses": ["CSCI345"] },
+    { "id": "csci-475", "label": "Senior Design I", "credits": 0.5, "courses": ["CSCI475"] },
+    { "id": "csci-476", "label": "Senior Design II", "credits": 1, "courses": ["CSCI476"] },
+    { "id": "math-201", "label": "Calculus I", "credits": 1, "courses": ["MATH201"] },
+    { "id": "math-202", "label": "Calculus II", "credits": 1, "courses": ["MATH202"] },
+    { "id": "stat-227", "label": "Statistics and Engineering", "credits": 1, "courses": ["STAT227"] },
+    {
+      "id": "discrete-structures",
+      "label": "Discrete Structures",
+      "credits": 1,
+      "courses": ["MATH241"],
+      "alternatives": [
+        { "courses": ["MATH280", "MATH240"], "minimumCombinedCredits": 1.5 },
+        { "rule": "approved 1.0-credit Combinatorics & Graph Theory course" }
+      ]
+    },
+    {
+      "id": "lab-science",
+      "label": "Natural science elective with lab",
+      "credits": 1,
+      "designation": "LBSC",
+      "excludedSubjects": ["MATH", "CSCI"]
+    },
+    {
+      "id": "science-elective",
+      "label": "Natural science elective",
+      "credits": 1,
+      "designation": "NSMC",
+      "excludedSubjects": ["MATH", "CSCI"]
+    }
+  ],
+  "writing": {
+    "w1": 1,
+    "w2": 2,
+    "notes": "One W1 course is normally taken in the first semester. CSCI476 fulfills one W2 requirement."
+  },
+  "seniorExperienceAlternative": "CSCI475 + CSCI476 may be replaced by a 1.5-credit senior/honors thesis or an approved culminating experience with at least 1.0 credits of 300-level or above coursework including a significant project.",
+  "catalogApplicability": "The 2026-2027 catalog is valid for the Class of 2030. Other students must use the catalog for their entry year."
+}

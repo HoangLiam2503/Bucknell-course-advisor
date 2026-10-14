@@ -279,6 +279,35 @@
   .load .b .v small{font-size:11px; font-weight:400; color:var(--text-3);}
   .load-note{font-size:11.5px; color:var(--text-3); line-height:1.55; margin-top:9px;}
 
+  /* Official-data recommendation sandbox */
+  .official-note{display:flex; gap:10px; align-items:flex-start; padding:13px 15px; margin-bottom:16px; background:var(--blue-bg); border:1px solid rgba(75,127,196,.38); border-radius:9px; color:var(--text-2); font-size:12.5px; line-height:1.55;}
+  .official-note svg{width:17px;height:17px;color:var(--blue);flex-shrink:0;margin-top:1px;}
+  .official-note b{display:block;color:var(--text);font-size:13px;margin-bottom:2px;}
+  .rec-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start;}
+  @media(max-width:1050px){.rec-layout{grid-template-columns:1fr;}}
+  .rec-controls{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+  .choice{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--text-2);font-size:12px;cursor:pointer;}
+  .choice:has(input:checked){border-color:var(--orange);color:var(--orange);background:var(--orange-bg);}
+  .choice input{accent-color:var(--orange);}
+  .rec-list{display:flex;flex-direction:column;}
+  .rec-course{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:13px;padding:16px 18px;border-bottom:1px solid var(--line-soft);}
+  .rec-course:last-child{border-bottom:none;}
+  .rec-rank{width:36px;height:36px;border-radius:9px;background:var(--orange-bg);color:var(--orange);display:grid;place-items:center;font-family:'Roboto Mono',monospace;font-weight:600;}
+  .rec-course .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .rec-course h3{font-size:14.5px;margin:0;font-weight:600;}
+  .rec-course h3 code{font-family:'Roboto Mono',monospace;font-size:11.5px;color:var(--orange);margin-right:7px;}
+  .rec-course .meta{font-size:11.5px;color:var(--text-3);margin-top:5px;line-height:1.5;}
+  .rec-course ul{margin:8px 0 0;padding-left:17px;color:var(--text-2);font-size:12px;line-height:1.5;}
+  .rec-course li.warn{color:var(--amber);}
+  .rec-score{text-align:right;min-width:58px;}
+  .rec-score b{display:block;font-size:20px;font-variant-numeric:tabular-nums;}
+  .rec-score span{font-size:10.5px;color:var(--text-3);}
+  .req-list{display:flex;flex-direction:column;gap:8px;}
+  .req-line{display:flex;gap:9px;justify-content:space-between;align-items:flex-start;padding:9px 10px;background:var(--panel-2);border-radius:7px;font-size:12px;}
+  .req-line span:first-child{color:var(--text-2);line-height:1.4;}
+  .req-line .st{flex-shrink:0;}
+  .sample-courses{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--text-3);line-height:1.7;margin-top:10px;}
+
   .prop-i .row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
   .swapbtn{background:var(--panel-2); border:1px solid var(--line); color:var(--text-2); font-size:11.5px; padding:4px 10px; border-radius:6px; cursor:pointer; white-space:nowrap;}
   .swapbtn:hover{color:var(--orange); border-color:var(--orange);}
@@ -311,6 +340,34 @@
   .modal ul{margin:0 0 16px; padding-left:18px; color:var(--text-2); font-size:13px; line-height:1.7;}
   .modal ul b{color:var(--text); font-weight:500;}
   .m-act{display:flex; gap:8px; justify-content:flex-end;}
+
+  /* In-portal advisor */
+  .btn-advisor{background:var(--blue-bg);color:#8BB7F0;border-color:rgba(75,127,196,.55);display:flex;align-items:center;gap:7px;}
+  .btn-advisor:hover{background:rgba(75,127,196,.24);color:#B4D1F5;}
+  .btn-advisor svg{width:15px;height:15px;}
+  .advisor-panel{position:fixed;right:20px;bottom:20px;width:min(390px,calc(100vw - 28px));height:min(620px,calc(100vh - 40px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.48);z-index:30;display:none;grid-template-rows:auto 1fr auto;overflow:hidden;}
+  .advisor-panel.show{display:grid;}
+  .advisor-head{display:flex;align-items:center;gap:10px;padding:14px 15px;border-bottom:1px solid var(--line-soft);background:linear-gradient(135deg,rgba(75,127,196,.15),rgba(232,119,34,.06));}
+  .advisor-mark{width:34px;height:34px;border-radius:9px;background:var(--blue-bg);color:#8BB7F0;display:grid;place-items:center;font-weight:700;}
+  .advisor-head .copy{flex:1;min-width:0;}
+  .advisor-head .copy b{display:block;font-size:13.5px;}
+  .advisor-head .copy span{display:block;font-size:10.5px;color:var(--text-3);margin-top:2px;}
+  .advisor-close{border:0;background:transparent;color:var(--text-3);font-size:20px;cursor:pointer;padding:3px 6px;line-height:1;}
+  .advisor-close:hover{color:var(--text);}
+  .advisor-thread{padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+  .advisor-msg{max-width:88%;padding:10px 12px;border-radius:10px;font-size:12.5px;line-height:1.55;white-space:pre-wrap;}
+  .advisor-msg.ai{align-self:flex-start;background:var(--panel-2);color:var(--text-2);border-bottom-left-radius:3px;}
+  .advisor-msg.user{align-self:flex-end;background:var(--orange-bg);color:var(--text);border-bottom-right-radius:3px;}
+  .advisor-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+  .advisor-chip{font-size:11px;padding:6px 9px;border-radius:13px;background:transparent;border:1px solid var(--line);color:var(--text-2);cursor:pointer;}
+  .advisor-chip:hover{border-color:var(--blue);color:#8BB7F0;}
+  .advisor-compose{padding:12px;border-top:1px solid var(--line-soft);background:var(--panel);}
+  .advisor-inputrow{display:flex;gap:8px;align-items:flex-end;}
+  .advisor-input{min-height:40px;max-height:92px;resize:none;flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font:inherit;font-size:12.5px;padding:10px 11px;}
+  .advisor-send{width:40px;height:40px;border-radius:8px;border:0;background:var(--orange);color:#12161F;cursor:pointer;font-size:17px;}
+  .advisor-send:disabled{opacity:.45;cursor:wait;}
+  .advisor-disclaimer{font-size:9.5px;color:var(--text-3);margin-top:7px;line-height:1.4;}
+  @media(max-width:640px){.advisor-panel{right:8px;bottom:8px;width:calc(100vw - 16px);height:calc(100vh - 16px);}}
 </style>
 </head>
 <body>
@@ -326,6 +383,7 @@
       <a data-view="schedule" href="#schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>My Schedule</a>
       <a data-view="audit" href="#audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 9L12 4 2 9l10 5 10-5z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/></svg>Degree Audit</a>
       <a data-view="transcript" href="#transcript"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15h6"/></svg>Transcripts</a>
+      <a data-view="recommendations" href="#recommendations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.4L18 9.2l-4.2 1.8L12 15.5 10.2 11 6 9.2l4.2-1.8L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>Smart Recommendations</a>
     </div>
     <div class="rail-foot">
       <div class="who">
@@ -343,6 +401,7 @@
       </div>
       <div class="topbar-actions">
         <button class="btn btn-ghost" id="resetBtn">Reset demo</button>
+        <button class="btn btn-advisor" id="advisorBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4L18 8.6l-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6L12 3z"/><path d="M18.5 14l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z"/></svg>Ask AI Advisor</button>
         <button class="btn btn-primary" id="planBtn">Plan my semester</button>
       </div>
     </div>
@@ -420,9 +479,69 @@
       <div class="card"><div class="card-head"><h2>Unofficial transcript</h2><span class="eyebrow" id="trSummary"></span></div><table class="tr" id="trTable"></table></div>
     </section>
 
+    <!-- Phase 1: official Bucknell 2026–27 data -->
+    <section class="view" id="view-recommendations">
+      <div class="official-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>
+        <div><b>Phase 1 sandbox · official Bucknell data</b>Recommendations combine the 2026–27 BSCS catalog, the Spring 2026–27 public section/seat feed, and the College of Arts & Sciences core requirements from Bucknell’s Class of 2024 page. The two cohorts are labelled separately; production must select Liam’s actual entry-year catalog.</div>
+      </div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head"><h2>Test recommendation signals</h2><span class="eyebrow" id="phase1Source">Loading official snapshot…</span></div>
+        <div class="card-body">
+          <div class="rec-controls">
+            <label class="choice"><input type="checkbox" data-phase-interest="ai" checked> AI</label>
+            <label class="choice"><input type="checkbox" data-phase-interest="security" checked> Cybersecurity</label>
+            <label class="choice"><input type="checkbox" data-phase-interest="data" checked> Data</label>
+            <label class="choice"><input type="checkbox" id="phase1StatDone"> Simulate STAT 227 completed</label>
+          </div>
+          <div class="load-note">Try the STAT 227 toggle: it should rank highly while required, then disappear after it is marked complete. Strong grades influence ranking only when a course still advances the degree.</div>
+        </div>
+      </div>
+      <div class="rec-layout">
+        <div class="card">
+          <div class="card-head"><h2>Recommended Spring courses</h2><span class="eyebrow" id="phase1Count">—</span></div>
+          <div class="rec-list" id="phase1Recommendations"><div class="card-body"><p class="empty">Loading recommendations…</p></div></div>
+        </div>
+        <aside>
+          <div class="card">
+            <div class="card-head"><h2>Remaining requirements</h2><span class="eyebrow">2026–27 BSCS</span></div>
+            <div class="card-body"><div class="req-list" id="phase1Requirements"><p class="empty">Loading degree map…</p></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Arts & Sciences Core</h2><span class="eyebrow">Class of 2024 source</span></div>
+            <div class="card-body"><div class="req-list" id="phase1CoreRequirements"><p class="empty">Loading college requirements…</p></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Sample transcript</h2><span class="eyebrow">Test scenario</span></div>
+            <div class="card-body"><div class="load-note" style="margin-top:0">Representative official course codes are used so the new ranking logic can be tested independently of the legacy 3-credit demo.</div><div class="sample-courses" id="phase1Transcript"></div></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
     <div class="mcp"><span class="dot" id="mcpDot"></span><span id="mcpText">Checking WebMCP support…</span></div>
   </main>
 </div>
+
+<aside class="advisor-panel" id="advisorPanel" aria-label="AI academic advisor" aria-hidden="true">
+  <div class="advisor-head">
+    <div class="advisor-mark">AI</div>
+    <div class="copy"><b>Ask AI Advisor</b><span>Optional · works inside the portal</span></div>
+    <button class="advisor-close" id="advisorClose" aria-label="Close AI advisor">×</button>
+  </div>
+  <div class="advisor-thread" id="advisorThread" aria-live="polite">
+    <div class="advisor-msg ai">Hi Liam — I can review your degree requirements, build a conflict-free draft, compare courses, or prepare registration. You always confirm enrollment changes.</div>
+    <div class="advisor-chips">
+      <button class="advisor-chip" data-advisor-prompt="Review my remaining degree requirements">Review requirements</button>
+      <button class="advisor-chip" data-advisor-prompt="Build a schedule with max 15 credits, nothing before 10am, prioritize AI and cybersecurity">Build a schedule</button>
+      <button class="advisor-chip" data-advisor-prompt="Show official Spring recommendations">Spring recommendations</button>
+    </div>
+  </div>
+  <form class="advisor-compose" id="advisorForm">
+    <div class="advisor-inputrow"><textarea class="advisor-input" id="advisorInput" rows="1" placeholder="Ask about courses, requirements or your schedule…"></textarea><button class="advisor-send" id="advisorSend" aria-label="Send message">↑</button></div>
+    <div class="advisor-disclaimer">Demo advisor. Official registration rules are rechecked by the portal; no course is added without your confirmation.</div>
+  </form>
+</aside>
 
 <div class="ov" id="ov">
   <div class="modal" role="dialog" aria-modal="true">
@@ -441,6 +560,7 @@
 </div>
 
 <script src="engine.js"></script>
+<script src="phase1-recommender.js"></script>
 <script type="module">
 try { if (!('modelContext' in document)) { const { initializeWebMCPPolyfill } = await import('https://esm.sh/@mcp-b/webmcp-polyfill'); initializeWebMCPPolyfill(); } }
 catch (e) { console.warn('WebMCP polyfill unavailable; native support only.', e); }
@@ -450,6 +570,82 @@ const SEED = new Map(A.CATALOG.map(c => [c.code, { seats: c.seats, waitlist: c.w
 const state = { profile: structuredClone(A.DEFAULT_PROFILE), registered: [], proposal: null, activeDept: null, alts: null };
 const $ = (id) => document.getElementById(id);
 const initials = (n) => n.replace(/^Prof\.\s*/, '').split(/\s+/).map(w => w[0]).slice(0, 2).join('');
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+const PHASE1_BASE_TRANSCRIPT = [
+  {code:'UNIV125',grade:'A-',designations:['FOUN','W1']},
+  {code:'SPAN101',grade:'B+',designations:['CCFL']},
+  {code:'HIST110',grade:'B',designations:['ARHC','GBCC']},
+  {code:'ECON103',grade:'B+',designations:['SLSC','DUSC']},
+  {code:'CSCI203',grade:'A'}, {code:'CSCI204',grade:'A-'}, {code:'CSCI205',grade:'B+'},
+  {code:'MATH201',grade:'B+',designations:['NMLG','CCQR']}, {code:'MATH202',grade:'A-',designations:['NSMC']}, {code:'MATH241',grade:'B'},
+  {code:'STAT216',grade:'A',designations:['NSMC','W2']}, {code:'PHYS211',grade:'B+',designations:['LBSC','NSMC']}
+];
+const phase1 = {program:null, core:null, offerings:null, loading:null, recommendations:[], statuses:[], coreStatuses:[]};
+
+function phase1Transcript(stat227Completed=$('phase1StatDone')?.checked){
+  return stat227Completed ? [...PHASE1_BASE_TRANSCRIPT,{code:'STAT227',grade:'A-'}] : [...PHASE1_BASE_TRANSCRIPT];
+}
+
+function selectedPhase1Interests(){
+  return [...document.querySelectorAll('[data-phase-interest]:checked')].map(input=>input.dataset.phaseInterest);
+}
+
+function meetingLabel(section){
+  const days={M:'Mon',T:'Tue',W:'Wed',R:'Thu',F:'Fri',S:'Sat',U:'Sun'};
+  const fmt=t=>t ? `${Number(t.slice(0,2))%12||12}:${t.slice(2)} ${Number(t.slice(0,2))>=12?'pm':'am'}` : 'TBA';
+  const meetings=(section.Meetings||[]).filter(m=>m.Start).map(m=>{
+    const active=Object.keys(days).filter(d=>m[d]==='Y').map(d=>days[d]).join('/');
+    return `${active} ${fmt(m.Start)}–${fmt(m.End)}${m.Location?` · ${m.Location}`:''}`;
+  });
+  return meetings.length ? meetings.join('; ') : 'Meeting time TBA';
+}
+
+function phase1Result(args={}){
+  const transcript=phase1Transcript(args.stat227Completed);
+  const interests=args.interests || selectedPhase1Interests();
+  const recommendations=window.Phase1Advisor.recommend({program:phase1.program,collegeCore:phase1.core,offerings:phase1.offerings,transcript,interests});
+  const completed=new Set(transcript.map(row=>row.code));
+  const statuses=window.Phase1Advisor.requirementStatus(phase1.program,completed,transcript);
+  const coreStatuses=window.Phase1Advisor.collegeCoreStatus(phase1.core,transcript);
+  return {transcript,interests,recommendations,statuses,coreStatuses};
+}
+
+function renderPhase1(args={}){
+  if(!phase1.program || !phase1.core || !phase1.offerings) return;
+  const result=phase1Result(args);
+  phase1.recommendations=result.recommendations; phase1.statuses=result.statuses; phase1.coreStatuses=result.coreStatuses;
+  const eligible=result.recommendations.filter(item=>item.eligible);
+  $('phase1Source').textContent=`${phase1.offerings.length.toLocaleString()} official sections · term 202705`;
+  $('phase1Count').textContent=`${eligible.length} eligible · top 10 shown`;
+  $('phase1Transcript').textContent=result.transcript.map(row=>`${row.code} ${row.grade}`).join('  ·  ');
+  $('phase1Requirements').innerHTML=result.statuses.map(requirement=>`<div class="req-line"><span>${esc(requirement.label)}</span><span class="st ${requirement.status==='complete'?'complete':'remaining'}">${requirement.status==='complete'?'COMPLETE':'REMAINING'}</span></div>`).join('');
+  $('phase1CoreRequirements').innerHTML=result.coreStatuses.map(requirement=>{
+    const done=requirement.status==='complete', manual=requirement.status==='advisor-check';
+    return `<div class="req-line"><span>${esc(requirement.label)}<small style="display:block;color:var(--text-3);margin-top:3px">${esc(requirement.progress)}</small></span><span class="st ${done?'complete':manual?'in-progress':'remaining'}">${done?'COMPLETE':manual?'CHECK':'REMAINING'}</span></div>`;
+  }).join('');
+  $('phase1Recommendations').innerHTML=eligible.length ? eligible.slice(0,10).map((item,index)=>{
+    const section=item.section, instructor=(section.Instructors||[]).map(x=>x.Display).join(', ')||'Instructor TBA';
+    const reasons=item.reasons.map(reason=>`<li>${esc(reason)}</li>`).join('');
+    const cautions=item.cautions.map(caution=>`<li class="warn">${esc(caution)}</li>`).join('');
+    return `<article class="rec-course" id="phase1-${esc(item.code)}"><div class="rec-rank">${index+1}</div><div>
+      <div class="head"><h3><code>${esc(item.code)}</code>${esc(item.title)}</h3><span class="status eligible">ELIGIBLE</span></div>
+      <div class="meta">Section ${esc(section.Section)} · ${esc(instructor)} · ${esc(meetingLabel(section))} · ${window.Phase1Advisor.availableSeats(section)} usable seats</div>
+      <ul>${reasons}${cautions}</ul></div><div class="rec-score"><b>${item.score}</b><span>priority score</span></div></article>`;
+  }).join('') : '<div class="card-body"><p class="empty">No eligible recommendations match this test scenario.</p></div>';
+  return result;
+}
+
+async function loadPhase1(){
+  if(phase1.program && phase1.core && phase1.offerings) return phase1;
+  if(!phase1.loading) phase1.loading=Promise.all([
+    fetch('data/bscs-2026-27.json').then(r=>{if(!r.ok) throw new Error(`degree map ${r.status}`); return r.json();}),
+    fetch('data/cas-core-class-2024.json').then(r=>{if(!r.ok) throw new Error(`college core ${r.status}`); return r.json();}),
+    fetch('data/spring-2027-sections.json').then(r=>{if(!r.ok) throw new Error(`course snapshot ${r.status}`); return r.json();})
+  ]).then(([program,core,offerings])=>{phase1.program=program;phase1.core=core;phase1.offerings=offerings;renderPhase1();return phase1;})
+    .catch(error=>{$('phase1Source').textContent='Official data could not be loaded';$('phase1Recommendations').innerHTML=`<div class="card-body"><p class="empty">${esc(error.message)}</p></div>`;throw error;});
+  return phase1.loading;
+}
 
 function flash(el){ if(!el) return; el.classList.remove('agent-hit'); void el.offsetWidth; el.classList.add('agent-hit'); setTimeout(()=>el.classList.remove('agent-hit'),1000); }
 
@@ -462,7 +658,7 @@ function renderStats(){
   const remaining = Math.max(0, p.creditsRequired - p.creditsCompleted - planned);
   $('avInit').textContent = p.name.split(' ').map(w=>w[0]).join('');
   $('railName').textContent = p.name;
-  $('railMajor').textContent = p.major;
+  $('railMajor').textContent = p.college ? `${p.major} · Arts & Sciences` : p.major;
   $('stats').innerHTML = `
     <div class="stat"><div class="k">Degree progress</div><div class="v">${p.creditsCompleted}<small>/ ${p.creditsRequired} credits</small></div>
       <div class="meter"><i style="width:${earnedPct}%"></i><i class="blue" style="width:${progPct}%"></i></div>
@@ -671,6 +867,7 @@ const VIEW_META={
   schedule:['Fall 2026 · Week view','My Schedule'],
   audit:['Bachelor of Science · Computer Science','Degree Audit'],
   transcript:['Unofficial · For advising use only','Transcript'],
+  recommendations:['Official Spring 2026–27 · Phase 1','Smart Recommendations'],
 };
 function showView(v){
   if(!VIEW_META[v]) v='registration';
@@ -683,12 +880,18 @@ function showView(v){
   else { $('slot-catalog-reg').appendChild($('catalogCard')); }
   if(v==='schedule'){ $('slot-plan-sched').appendChild($('planCard')); $('slot-side-sched').append($('wlCard'),$('propCard')); }
   else { $('slot-aside-reg').prepend($('planCard'),$('wlCard'),$('propCard')); }
-  $('planBtn').style.display = (v==='audit'||v==='transcript')?'none':'';
+  $('planBtn').style.display = (v==='audit'||v==='transcript'||v==='recommendations')?'none':'';
   if(location.hash!=='#'+v) history.replaceState(null,'','#'+v);
-  renderTimetable(); renderWeek(); if(v==='transcript') renderTranscript(); if(v==='audit') renderAudit();
+  renderTimetable(); renderWeek(); if(v==='transcript') renderTranscript(); if(v==='audit') renderAudit(); if(v==='recommendations') loadPhase1();
 }
 document.querySelector('.nav').addEventListener('click',e=>{ const a=e.target.closest('[data-view]'); if(!a) return; e.preventDefault(); showView(a.dataset.view); });
 window.addEventListener('hashchange',()=>showView(location.hash.slice(1)));
+document.querySelectorAll('label.choice').forEach(label=>label.addEventListener('click',event=>{
+  event.preventDefault();
+  const input=label.querySelector('input');
+  input.checked=!input.checked;
+  renderPhase1();
+}));
 
 function log(actor,msg){
   const e=$('log').querySelector('.empty'); if(e) e.remove();
@@ -831,11 +1034,88 @@ function resetDemo(){
   renderAll();
 }
 
+// ---------- In-portal AI advisor ----------
+function setAdvisorOpen(open){
+  $('advisorPanel').classList.toggle('show',open);
+  $('advisorPanel').setAttribute('aria-hidden',String(!open));
+  if(open) setTimeout(()=>$('advisorInput').focus(),0);
+}
+
+function advisorMessage(role,message){
+  const el=document.createElement('div');
+  el.className=`advisor-msg ${role}`;
+  el.textContent=message;
+  $('advisorThread').appendChild(el);
+  $('advisorThread').scrollTop=$('advisorThread').scrollHeight;
+}
+
+function parseAdvisorPlan(prompt){
+  const lower=prompt.toLowerCase();
+  const creditMatch=lower.match(/(?:max(?:imum)?|tối đa)\s*(\d{1,2})/);
+  const timeMatch=lower.match(/(?:before|trước)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|h|giờ)?/);
+  const priorities=[];
+  const keywords={ai:'ai',cybersecurity:'security',security:'security','an ninh':'security',web:'web',data:'data','dữ liệu':'data',ethics:'ethics','đạo đức':'ethics',design:'design','thiết kế':'design'};
+  for(const [word,tag] of Object.entries(keywords)) if(lower.includes(word)&&!priorities.includes(tag)) priorities.push(tag);
+  let earliestStart=state.profile.earliestStart;
+  if(timeMatch){
+    let hour=Number(timeMatch[1]); const minute=Number(timeMatch[2]||0), suffix=timeMatch[3];
+    if(suffix==='pm'&&hour<12) hour+=12; if(suffix==='am'&&hour===12) hour=0;
+    earliestStart=`${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+  }
+  return {maxCredits:creditMatch?Number(creditMatch[1]):state.profile.maxCredits,earliestStart,latestEnd:state.profile.latestEnd,
+    priorities:priorities.length?priorities:state.profile.interests,avoidDays:state.profile.avoidDays};
+}
+
+async function handleAdvisorPrompt(prompt){
+  const lower=prompt.toLowerCase();
+  if(/register|enroll|đăng ký/.test(lower)){
+    if(!state.proposal?.plan?.length) return 'There is no draft to register yet. Ask me to build a schedule first.';
+    const codes=state.proposal.plan.map(c=>c.code);
+    setAdvisorOpen(false);
+    const result=await requestRegistration(codes,'agent');
+    setAdvisorOpen(true);
+    return result;
+  }
+  if(/requirement|audit|graduate|tốt nghiệp|yêu cầu|còn thiếu/.test(lower)){
+    await loadPhase1(); const result=renderPhase1(); showView('recommendations');
+    const major=result.statuses.filter(r=>r.status!=='complete').map(r=>r.label);
+    const core=result.coreStatuses.filter(r=>r.status==='remaining').map(r=>r.label);
+    return `I opened your official-data requirement view.\n\nMajor requirements remaining: ${major.length}. Next examples: ${major.slice(0,4).join('; ')}.\n\nArts & Sciences core remaining: ${core.length}. Next examples: ${core.slice(0,4).join('; ')}.\n\nThe core source is labelled Class of 2024; production must use your actual entry-year catalog.`;
+  }
+  if(/official|spring|recommend|đề xuất|gợi ý/.test(lower)){
+    await loadPhase1(); const result=renderPhase1(); showView('recommendations');
+    const top=result.recommendations.filter(r=>r.eligible).slice(0,5);
+    return `I opened Smart Recommendations using the official Spring snapshot. Top options for this sample scenario:\n${top.map((r,i)=>`${i+1}. ${r.code} — ${r.title} (${r.score} points)`).join('\n')}`;
+  }
+  if(/schedule|plan|semester|lịch|môn/.test(lower)){
+    const constraints=parseAdvisorPlan(prompt), result=doBuildSchedule(constraints,'agent');
+    showView('registration');
+    if(!result.plan.length) return 'I could not find an eligible, conflict-free combination for those constraints. Try a later end time, an earlier start, or fewer priority topics.';
+    const load=A.workloadSummary(result.plan);
+    return `I created a draft — no seats are held.\n\n${result.plan.map(c=>`• ${c.code}: ${c.title} — ${A.describeSchedule(c)}`).join('\n')}\n\n${result.totalCredits} credits · about ${load.hours} hours/week (${load.band} workload). Review the blue draft on the Registration page, then tell me “register them” if you want to continue to confirmation.`;
+  }
+  if(/hello|hi|hey|xin chào|chào/.test(lower)) return `Hi Liam! I can review your Arts & Sciences and BSCS requirements, build a draft around your time preferences, or show official Spring recommendations.`;
+  return 'I can help with four things in this prototype: review degree requirements, show official Spring recommendations, build a schedule draft, or prepare registration for a draft. Try asking: “Build a schedule with nothing before 10am and prioritize AI.”';
+}
+
+async function submitAdvisorPrompt(prompt){
+  const clean=prompt.trim(); if(!clean) return;
+  advisorMessage('user',clean); $('advisorInput').value=''; $('advisorSend').disabled=true;
+  try{advisorMessage('ai',await handleAdvisorPrompt(clean));}
+  catch(error){console.error(error);advisorMessage('ai','I could not complete that request. Please try again or use the portal controls.');}
+  finally{$('advisorSend').disabled=false;$('advisorInput').focus();}
+}
+
 // ---------- Wiring ----------
 $('q').addEventListener('input',renderCatalog);
 $('onlyEligible').addEventListener('change',renderCatalog);
 $('resetBtn').addEventListener('click',resetDemo);
 $('planBtn').addEventListener('click',()=>doBuildSchedule({},'human'));
+$('advisorBtn').addEventListener('click',()=>setAdvisorOpen(true));
+$('advisorClose').addEventListener('click',()=>setAdvisorOpen(false));
+$('advisorForm').addEventListener('submit',event=>{event.preventDefault();submitAdvisorPrompt($('advisorInput').value);});
+$('advisorInput').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('advisorForm').requestSubmit();}});
+document.querySelectorAll('[data-advisor-prompt]').forEach(button=>button.addEventListener('click',()=>submitAdvisorPrompt(button.dataset.advisorPrompt)));
 $('deptbar').addEventListener('click',e=>{const b=e.target.closest('[data-dept]'); if(!b)return;
   state.activeDept=state.activeDept===b.dataset.dept?null:b.dataset.dept; renderDepts(); renderCatalog();});
 document.addEventListener('click',e=>{
@@ -957,6 +1237,26 @@ async function registerTools(){
         return text({creditsEarned:au.creditsEarned,creditsInProgress:au.creditsInProgress,creditsRemaining:au.creditsRemaining,gpa:au.gpa,
           requirements:au.areas.map(a=>({area:a.area,items:a.items.map(i=>({name:i.name,status:i.status,stillNeed:i.stillNeed,completed:i.completed,inProgress:i.inProgress,offeredThisTerm:i.availableThisTerm}))}))});}});
 
+    await mc.registerTool({name:'get_phase1_recommendations',
+      description:'Use official Bucknell sources to rank eligible courses: 2026–27 BSCS major requirements, Spring 2026–27 public sections/seats, and College of Arts & Sciences core requirements from the Class of 2024 page. Returns both major and college-core audit status, prerequisite-path value, interest matches, usable seats, reasons and cautions. Opens Smart Recommendations. Cohorts are labelled separately; production must select the student’s actual entry-year catalog.',
+      inputSchema:{type:'object',properties:{
+        interests:{type:'array',items:{type:'string',enum:['ai','security','data']},description:'Interest signals to include in ranking.'},
+        stat227Completed:{type:'boolean',description:'Test switch: mark STAT 227 complete to verify that it stops being recommended as a missing requirement.'}}},
+      execute:async(args={})=>{
+        await loadPhase1();
+        if(args.interests){document.querySelectorAll('[data-phase-interest]').forEach(input=>{input.checked=args.interests.includes(input.dataset.phaseInterest);});}
+        if(typeof args.stat227Completed==='boolean') $('phase1StatDone').checked=args.stat227Completed;
+        const result=renderPhase1({interests:args.interests,stat227Completed:args.stat227Completed});
+        showView('recommendations'); flash($('phase1Recommendations').closest('.card'));
+        log('agent','ranked Spring 2026–27 courses from the official Bucknell snapshot.');
+        return text({student:{name:state.profile.name,college:state.profile.college,major:state.profile.major},catalogYear:phase1.program.catalogYear,
+          collegeCoreCohort:phase1.core.cohort,term:'202705',sectionCount:phase1.offerings.length,
+          catalogApplicability:phase1.program.catalogApplicability,collegeCoreSourceNote:phase1.core.sourceNote,interests:result.interests,
+          remainingRequirements:result.statuses.filter(r=>r.status!=='complete').map(r=>({id:r.id,label:r.label,status:r.status})),
+          collegeCore:result.coreStatuses.map(r=>({group:r.group,label:r.label,status:r.status,progress:r.progress,matchedCourses:r.matchedCourses})),
+          recommendations:result.recommendations.filter(r=>r.eligible).slice(0,10).map(r=>({code:r.code,title:r.title,score:r.score,
+            section:r.section.Section,credits:r.section.Credit,meeting:meetingLabel(r.section),usableSeats:window.Phase1Advisor.availableSeats(r.section),reasons:r.reasons,cautions:r.cautions}))});}});
+
     await mc.registerTool({name:'get_schedule',
       description:'Return the student’s registered courses with instructors, meeting times, rooms, total credits, and any waitlists they are on.',
       inputSchema:{type:'object',properties:{}},
@@ -976,7 +1276,7 @@ async function registerTools(){
       execute:async(args={})=>text(doUpdatePreferences(args,'agent'))});
 
     $('mcpDot').className='dot on';
-    $('mcpText').textContent='WebMCP connected — 13 site tools available. Your advisor can check degree progress, draft a schedule, swap a single course, weigh workload, and request registration — you confirm every enrollment change.';
+    $('mcpText').textContent='WebMCP connected — 14 site tools available. Your advisor can use official Spring 2026–27 recommendations, check degree progress, draft a schedule, swap a course, and request registration — you confirm every enrollment change.';
   }catch(err){ $('mcpText').textContent='Could not register WebMCP tools: '+err.message; console.error(err); }
 }
 registerTools();

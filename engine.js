@@ -17,9 +17,10 @@
 
   // ---------- Seed data ----------
   const DEFAULT_PROFILE = {
-    name: 'Jordan Reyes',
+    name: 'Liam Nguyen',
     studentId: 'BU-2023-4471',
     major: 'Computer Science',
+    college: 'College of Arts & Sciences',
     year: 'Junior',
     gpa: 0, creditsCompleted: 0, creditsRequired: 128, completed: [], // filled from transcript below
     interests: ['ai', 'security', 'web'],

@@ -2,6 +2,8 @@
 
 A university course-registration portal where the AI in your browser acts as an **academic advisor that can actually do things**: read your profile, search the catalog, check prerequisites and seat availability, build a conflict-free schedule from a plain-language request, and register you — with every enrollment change gated behind a confirmation you click yourself.
 
+Students do not need ChatGPT to use the core experience. The portal includes an optional **Ask AI Advisor** panel that can review requirements, open official-data recommendations, build a draft and prepare registration from the same structured advising logic. WebMCP remains an additional client channel rather than the only interface.
+
 Built for the **OpenAI WebMCP Challenge** (webmcp.devpost.com).
 
 ## What makes this an advisor, not a schedule filter
@@ -15,7 +17,7 @@ Built for the **OpenAI WebMCP Challenge** (webmcp.devpost.com).
 
 Course registration is a task every student dreads: cross-checking prerequisites, GPA cutoffs, open seats and time conflicts across dozens of courses, then clicking through a multi-step form under a deadline. A chatbot can *talk* about it. With WebMCP, the agent works on the **same live page** the student is looking at:
 
-- **Structured, not scraped.** Instead of screenshots and guessed clicks, the page exposes thirteen typed tools with schemas — `search_courses` returns eligibility status with reasons, `build_schedule` returns a plan with the rationale for every pick.
+- **Structured, not scraped.** Instead of screenshots and guessed clicks, the page exposes fourteen typed tools with schemas — `search_courses` returns eligibility status with reasons, `build_schedule` returns a plan with the rationale for every pick.
 - **Shared context.** The student sees exactly what the agent does: search filters change on screen, the proposed schedule appears as dashed blocks on the timetable, and the activity log labels every action as **You** or **Advisor agent**.
 - **Human-in-the-loop for sensitive actions.** `register_course` and `drop_course` open a confirmation dialog and the tool call *waits* for the student's click. The agent gets back "confirmed" or "declined" — it cannot enroll anyone on its own. This mirrors the pattern OpenAI and Chrome describe for purchases and other consequential actions.
 
@@ -36,6 +38,7 @@ The agent calls `get_student_profile`, then `build_schedule` with those constrai
 | `register_course` | Enroll in one or more courses | **Student must click Confirm** |
 | `drop_course` | Remove a course from the plan | **Student must click Confirm** |
 | `get_degree_audit` | Credits earned/in progress/remaining and every graduation requirement with status; opens the Degree Audit page | – |
+| `get_phase1_recommendations` | Official 2026–27 BSCS requirements + Spring 2026–27 sections, ranked with reasons, cautions and reservation-aware seats | – |
 | `get_schedule` | Current plan with credits and meeting times | – |
 | `suggest_alternatives` | 2–3 replacements for one draft course, keeping the rest fixed; each with requirement, workload and explicit trade-offs | – |
 | `swap_draft_course` | Swap one course out of the draft (and optionally another in) without rebuilding | – (draft only) |
@@ -58,22 +61,41 @@ Serve over HTTP rather than opening the file directly; some browser APIs are res
 
 ## Test with a real agent
 
-1. **ChatGPT desktop app** (macOS/Windows): open a Work or Codex chat, press ⌘⇧B / Ctrl⇧B to open the built-in browser, navigate to the URL, and check **Site tools** in the address bar — you should see the thirteen tools. Then ask ChatGPT to plan your semester. Requires a model with WebMCP enabled (GPT-5.6 Sol or Terra at time of writing).
+1. **ChatGPT desktop app** (macOS/Windows): open a Work or Codex chat, press ⌘⇧B / Ctrl⇧B to open the built-in browser, navigate to the URL, and check **Site tools** in the address bar — you should see the fourteen tools. Then ask ChatGPT to plan your semester. Requires a model with WebMCP enabled (GPT-5.6 Sol or Terra at time of writing).
 2. **Google Chrome 149+**: enable `chrome://flags/#enable-webmcp-testing`, restart, open the URL.
 
 The status line at the bottom of the page reports whether WebMCP is available. In other browsers the page tries to load the `@mcp-b/webmcp-polyfill` from esm.sh so tool logic can still be exercised from DevTools during development.
 
 ## Deploy
 
-Drag the folder (`index.html`, `engine.js`) onto Netlify Drop, or `vercel --prod`, or connect the repo to Render / Cloudflare Pages with no build command.
+Drag the folder onto Netlify Drop, run `vercel --prod`, or connect the repo to Render / Cloudflare Pages with no build command. Keep `phase1-recommender.js` and `data/` beside `index.html`.
 
 ## Pages
 
-Registration (catalog + plan side by side), Course Catalog (full width), My Schedule (week grid + day list), Degree Audit (requirements with complete / in-progress / remaining status, driven by the transcript and current registrations), and Transcript. Navigation is hash-based (`#audit`, `#schedule`, …) so the agent can send the student to a page by calling the matching tool.
+Registration (catalog + plan side by side), Course Catalog (full width), My Schedule (week grid + day list), Degree Audit, Transcript, and Smart Recommendations (the official-data Phase 1 sandbox). Navigation is hash-based (`#audit`, `#recommendations`, …) so the agent can send the student to a page by calling the matching tool.
 
 ## Data
 
 The student's transcript (16 completed courses across four terms — GPA and credits earned are computed from it, not hard-coded), the B.S. Computer Science requirement map, and the Fall 2026 catalog (22 sections with instructors, rooms, prerequisites, GPA minimums, seats, waitlists and meeting times) are seeded in `engine.js` so the demo runs without a backend. Swapping in a real SIS API means replacing `CATALOG`, `DEFAULT_PROFILE`, and the `seats` mutations in `index.html`.
+
+### Phase 1: official 2026–27 Bucknell data
+
+The migration away from demo data has started in a separate, testable layer:
+
+- `data/bscs-2026-27.json` encodes the official 2026–27 B.S. Computer Science requirements, including substitutions and science/writing rules.
+- `data/cas-core-class-2024.json` encodes the University writing and College of Arts & Sciences core rules from Bucknell's Class of 2024 requirements page. The UI labels this separately because it is not the same cohort as the 2026–27 major catalog.
+- `scripts/fetch-spring-2027.mjs` downloads the public Spring 2026–27 section and live-seat feeds from Bucknell Course Information.
+- `data/spring-2027-sections.json` is the generated snapshot used for deterministic testing.
+- `phase1-recommender.js` ranks sections by remaining requirements, prerequisite-path value, prior subject performance, interests and seat availability. A high grade only boosts a course when it also closes a remaining named requirement; otherwise it appears as context rather than the main recommendation reason.
+
+Refresh and verify the official snapshot with:
+
+```bash
+node scripts/fetch-spring-2027.mjs
+node test-phase1.js
+```
+
+The 2026–27 catalog applies to the Class of 2030. Production degree audits must select the catalog associated with each student's entry year.
 
 ## Verify the engine
 

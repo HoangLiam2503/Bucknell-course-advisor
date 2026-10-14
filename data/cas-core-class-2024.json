@@ -1,0 +1,23 @@
+{
+  "college": "College of Arts & Sciences",
+  "cohort": "Class of 2024",
+  "creditsRequired": 32,
+  "source": "https://www.bucknell.edu/meet-bucknell/class-pages/class-2024/course-information-first-year-students/general-university-requirements",
+  "sourceNote": "This requirement set comes from Bucknell's Class of 2024 first-year information page. Use the student's actual entry-year catalog in production.",
+  "requirements": [
+    { "id": "writing-w1", "group": "University Writing", "label": "One W1 course", "designations": ["W1"], "count": 1 },
+    { "id": "writing-w2", "group": "University Writing", "label": "Two W2 courses", "designations": ["W2"], "count": 2 },
+    { "id": "foundation", "group": "Intellectual Skills", "label": "Foundation Seminar", "designations": ["FOUN", "RESC"], "count": 1, "notes": "Required in the first semester; all sections are W1." },
+    { "id": "lab-science", "group": "Intellectual Skills", "label": "Lab science", "designations": ["LBSC"], "count": 1 },
+    { "id": "foreign-language", "group": "Intellectual Skills", "label": "Foreign language", "designations": ["CCFL"], "count": 1 },
+    { "id": "integrated-perspectives", "group": "Intellectual Skills", "label": "Integrated Perspectives", "designations": ["CCIP"], "count": 1, "notes": "Normally taken in the sophomore year." },
+    { "id": "arts-humanities", "group": "Disciplinary Perspectives", "label": "Arts & Humanities: two courses, one learning-goal course", "designations": ["AHLG", "ARHC"], "count": 2, "learningGoalDesignations": ["AHLG"], "learningGoalCount": 1 },
+    { "id": "social-sciences", "group": "Disciplinary Perspectives", "label": "Social Sciences: two courses, one learning-goal course", "designations": ["SSLG", "SLSC"], "count": 2, "learningGoalDesignations": ["SSLG"], "learningGoalCount": 1 },
+    { "id": "natural-sciences", "group": "Disciplinary Perspectives", "label": "Natural Sciences & Mathematics: two courses, one learning-goal course", "designations": ["NMLG", "NSMC"], "count": 2, "learningGoalDesignations": ["NMLG"], "learningGoalCount": 1, "excludeDesignations": ["LBSC"], "notes": "These two courses are in addition to the lab science." },
+    { "id": "diversity-us", "group": "Tools for Critical Engagement", "label": "Diversity in the U.S.", "designations": ["DUSC"], "count": 1 },
+    { "id": "environmental-connections", "group": "Tools for Critical Engagement", "label": "Environmental Connections", "designations": ["EVCN"], "count": 1 },
+    { "id": "global-connections", "group": "Tools for Critical Engagement", "label": "Global Connections", "designations": ["GBCC"], "count": 1 },
+    { "id": "quantitative-reasoning", "group": "Tools for Critical Engagement", "label": "Quantitative Reasoning", "designations": ["CCQR"], "count": 1 },
+    { "id": "culminating-experience", "group": "Culminating Experience", "label": "Integrative course or equivalent experience in the major", "manualCheck": true, "notes": "Normally completed in the senior year; the major determines the approved experience." }
+  ]
+}
