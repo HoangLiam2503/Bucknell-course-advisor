@@ -92,10 +92,10 @@
         avoidDays: { type: 'array', items: { type: 'string', enum: DAYS } } } } },
   ];
 
-  /** Tool definitions in Claude Messages API shape (stable order, no extra keys). */
-  function forClaude() {
-    return TOOLS.map(t => ({ name: t.name, description: t.description, input_schema: t.inputSchema }));
+  /** Function declarations in Gemini API shape (stable order, no extra keys). */
+  function forGemini() {
+    return TOOLS.map(t => ({ name: t.name, description: t.description, parametersJsonSchema: t.inputSchema }));
   }
 
-  return { TOOLS, TAGS, DAYS, forClaude };
+  return { TOOLS, TAGS, DAYS, forGemini };
 });

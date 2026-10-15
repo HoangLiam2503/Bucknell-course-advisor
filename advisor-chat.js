@@ -1,5 +1,5 @@
 /* In-portal AI advisor chat.
-   Runs the Claude tool-use loop in the browser: /api/advisor relays each turn to Claude,
+   Runs the tool-use loop in the browser: /api/advisor relays each turn to Gemini,
    tool calls run against the portal's own handlers, and results are rendered as cards.
    History is append-only (never edited) so the model's thinking blocks stay valid. */
 
@@ -244,6 +244,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
         if (gen !== generation) return; // conversation was reset while waiting
         const textOut = data.content.filter(b => b.type === 'text' && b.text.trim()).map(b => b.text).join('\n\n');
         if (data.stop_reason === 'refusal') { rollback(); stopTyping(); bubble('ai', 'I can’t help with that here. I can help with courses, requirements and your schedule.'); break; }
+        if (data.stop_reason === 'error') { rollback(); stopTyping(); notice('The advisor had trouble with that request. Try rephrasing it.', 'warn'); break; }
         messages.push({ role: 'assistant', content: data.content });
         const toolCalls = data.content.filter(b => b.type === 'tool_use');
         if (data.stop_reason === 'tool_use' && toolCalls.length) {

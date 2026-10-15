@@ -2,7 +2,7 @@
 
 A university course-registration portal where the AI in your browser acts as an **academic advisor that can actually do things**: read your profile, search the catalog, check prerequisites and seat availability, build a conflict-free schedule from a plain-language request, and register you — with every enrollment change gated behind a confirmation you click yourself.
 
-Students do not need ChatGPT to use the core experience. The portal includes an **Ask AI Advisor** panel powered by Claude: students ask in plain language, the advisor calls the same fourteen portal tools that WebMCP exposes, explains every recommendation (requirement, prerequisites, conflicts, credits, workload, seats, warnings) and builds a draft schedule. It never registers anyone — enrollment changes appear as a card the student must confirm. WebMCP remains an additional client channel rather than the only interface.
+Students do not need ChatGPT to use the core experience. The portal includes an **Ask AI Advisor** panel powered by Google Gemini: students ask in plain language, the advisor calls the same fourteen portal tools that WebMCP exposes, explains every recommendation (requirement, prerequisites, conflicts, credits, workload, seats, warnings) and builds a draft schedule. It never registers anyone — enrollment changes appear as a card the student must confirm. WebMCP remains an additional client channel rather than the only interface.
 
 Built for the **OpenAI WebMCP Challenge** (webmcp.devpost.com).
 
@@ -48,10 +48,10 @@ The agent calls `get_student_profile`, then `build_schedule` with those constrai
 
 Tool names, descriptions and schemas live in `advisor-tools.js`, shared by the WebMCP registration, the in-portal advisor and the `/api/advisor` function. Handlers are in `index.html` (`TOOL_HANDLERS`). All scheduling and eligibility logic lives in `engine.js` (pure JavaScript, no dependencies) so it can be unit-tested with Node.
 
-## In-portal AI advisor (Claude)
+## In-portal AI advisor (Gemini)
 
 ```
-browser: advisor-chat.js ──POST {messages}──▶ api/advisor.js ──▶ Claude Messages API
+browser: advisor-chat.js ──POST {messages}──▶ api/advisor.js ──▶ Gemini API (generateContent)
    ▲ runs tool_use with the portal's handlers   (API key, system prompt, tool list stay server-side)
    └ sends tool_result back, up to 6 rounds per question
 ```
@@ -65,21 +65,23 @@ browser: advisor-chat.js ──POST {messages}──▶ api/advisor.js ──▶
 
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
-| `ANTHROPIC_API_KEY` | yes | – | Claude API key. Never commit it; set it in Vercel or `.env.local`. |
-| `ADVISOR_MODEL` | no | `claude-sonnet-5-5` | Model id. |
-| `ADVISOR_EFFORT` | no | `medium` | `low` is faster and cheaper; `medium` handles multi-step planning better. |
+| `GEMINI_API_KEY` | yes | – | Gemini API key from Google AI Studio. Never commit it; set it in Vercel or `.env.local`. |
+| `ADVISOR_MODEL` | no | `gemini-3.8-flash` | Model id. `gemini-3.5-flash-lite` is faster with a larger free quota. |
+| `GEMINI_THINKING_LEVEL` | no | `low` | `minimal` (Flash-Lite only), `low`, `medium` or `high`. Higher is slower and uses more of the quota. |
 | `ADVISOR_ALLOWED_ORIGINS` | no | – | Extra comma-separated origins allowed to call the API (same host and localhost are always allowed). |
 | `ADVISOR_DISABLED` | no | – | `1` pauses the advisor without calling the API (the panel shows "demo limit reached"). |
 
 ```bash
-vercel env add ANTHROPIC_API_KEY      # paste the key at the prompt, for Production/Preview/Development
+vercel env add GEMINI_API_KEY         # paste the key at the prompt, for Production/Preview/Development
 vercel env pull .env.local            # local development (.env.* is git-ignored)
 ```
 
-### Usage limits
+### Usage limits and cost
 
-- **Hard cap:** set a spend limit on the Anthropic Console workspace that owns the key. When it is reached the API answers `402 billing_error`; the function returns `limit_reached` and the panel pauses itself — no retries, no fallback model, no further spend.
-- **Soft caps in the function:** origin check, 60 requests per IP per 10 minutes (per instance, best-effort), 2,000 characters per message, 80 messages per conversation, `max_tokens` 16,000, at most 6 tool rounds per question.
+- **Free by construction:** create the key in Google AI Studio for a Google Cloud project **without billing enabled**. Such a project can only use the free tier, so it cannot be charged. When the free quota is used up the API answers `429 RESOURCE_EXHAUSTED`.
+- **Paused, not retried:** a spent daily quota (or a billing spend cap) is returned to the browser as `limit_reached`, and the panel pauses itself for the session — no retries, no other model. A per-minute limit shows "try again shortly". `ADVISOR_DISABLED=1` pauses the advisor without calling the API.
+- **Soft caps in the function:** origin check, 60 requests per IP per 10 minutes (per instance, best-effort), 2,000 characters per message, 80 messages per conversation, 8,192 output tokens per turn, at most 6 tool rounds per question.
+- **Privacy:** Google may use free-tier prompts and responses to improve its products. This prototype only sends the demo profile and demo/snapshot course data; a production deployment with real student records needs the paid tier and a data-processing agreement.
 
 ## Run locally
 

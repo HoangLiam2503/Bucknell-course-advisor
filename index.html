@@ -567,7 +567,7 @@
 <aside class="advisor-panel" id="advisorPanel" aria-label="AI academic advisor" aria-hidden="true">
   <div class="advisor-head">
     <div class="advisor-mark">AI</div>
-    <div class="copy"><b>Ask AI Advisor</b><span>Powered by Claude · drafts only, you confirm changes</span></div>
+    <div class="copy"><b>Ask AI Advisor</b><span>Powered by Gemini · drafts only, you confirm changes</span></div>
     <button type="button" class="advisor-reset" id="advisorReset" aria-label="Start a new conversation" title="New conversation">↺</button>
     <button type="button" class="advisor-close" id="advisorClose" aria-label="Close AI advisor">×</button>
   </div>
@@ -581,7 +581,7 @@
   </div>
   <form class="advisor-compose" id="advisorForm">
     <div class="advisor-inputrow"><label class="sr-only" for="advisorInput">Message the AI advisor</label><textarea class="advisor-input" id="advisorInput" rows="1" maxlength="2000" placeholder="Ask about courses, requirements or your schedule…"></textarea><button class="advisor-send" id="advisorSend" aria-label="Send message">↑</button></div>
-    <div class="advisor-disclaimer">AI-generated advice using a demo profile, demo Fall catalog and a saved Spring 2026–27 snapshot — not live data. Verify with your academic advisor. Nothing is registered without your confirmation.</div>
+    <div class="advisor-disclaimer">AI-generated advice using a demo profile, demo Fall catalog and a saved Spring 2026–27 snapshot — not live data. Messages are processed by Google Gemini (free tier) — don’t share personal information. Verify with your academic advisor. Nothing is registered without your confirmation.</div>
   </form>
 </aside>
 
@@ -1297,7 +1297,7 @@ async function registerTools(){
 }
 registerTools();
 
-// ---------- In-portal AI advisor (Claude via /api/advisor) ----------
+// ---------- In-portal AI advisor (Gemini via /api/advisor) ----------
 createAdvisorChat({
   handlers:TOOL_HANDLERS,
   offlineReply:handleAdvisorPrompt,

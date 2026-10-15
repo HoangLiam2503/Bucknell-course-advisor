@@ -1,17 +1,24 @@
-/* POST /api/advisor — thin proxy between the in-portal chat and the Claude Messages API.
+/* POST /api/advisor — thin proxy between the in-portal chat and the Gemini API.
    The browser owns state and runs the tools; this function owns the API key, the system
-   prompt and the tool list, so the client cannot change guardrails. It never edits the
-   conversation it is given: history must stay append-only for thinking blocks to stay valid. */
-const Anthropic = require('@anthropic-ai/sdk').default;
+   prompt and the tool list, so the client cannot change guardrails.
+
+   Wire format with the browser (provider-neutral blocks):
+     user:      { type:'text', text } | { type:'tool_result', tool_use_id, content, is_error? }
+     assistant: { type:'text', text, signature? } | { type:'tool_use', id, name, input, signature? }
+                | { type:'thought', text, signature? } | { type:'raw', part }
+   Assistant blocks map 1:1 to Gemini parts and keep their thoughtSignature, so history the
+   browser sends back reproduces the model's turns exactly. The browser never edits history. */
+const { GoogleGenAI, ApiError, FunctionCallingConfigMode, ThinkingLevel } = require('@google/genai');
 const AdvisorTools = require('../advisor-tools.js');
 
-const MODEL = process.env.ADVISOR_MODEL || 'claude-sonnet-5-5';
-const EFFORT = process.env.ADVISOR_EFFORT || 'medium';
-const MAX_TOKENS = 16000;
-const MAX_BODY_BYTES = 300 * 1024;
+const MODEL = 'gemini-3.8-flash';
+const THINKING_LEVEL = 'low';
+const MAX_OUTPUT_TOKENS = 8192;
+const MAX_BODY_BYTES = 1024 * 1024;
 const MAX_MESSAGES = 80;
 const MAX_USER_TEXT = 2000;
 const RATE_LIMIT = { requests: 60, windowMs: 10 * 60 * 1000 };
+const GENERATED_ID = 'gen_';
 
 const SYSTEM_PROMPT = `You are the academic advisor built into myBucknell, Bucknell University's course registration portal. You are talking with the signed-in student. You help them understand degree progress, choose courses and build a draft schedule.
 
@@ -33,7 +40,8 @@ Style:
 - Be concise: a short answer first, then at most a few bullets using "•". Plain text only — no markdown headings, tables, bold or code blocks. The portal shows cards for drafts and recommendations, so do not repeat every field the card already shows.
 - Messages that start with "[Portal context]" or "[Portal event]" are written by the portal, not typed by the student. Treat them as facts about the page state.`;
 
-const TOOLS = AdvisorTools.forClaude();
+const FUNCTION_DECLARATIONS = AdvisorTools.forGemini();
+const REFUSAL_REASONS = new Set(['SAFETY', 'RECITATION', 'BLOCKLIST', 'PROHIBITED_CONTENT', 'SPII']);
 
 function send(res, status, body, headers = {}) {
   res.statusCode = status;
@@ -60,7 +68,7 @@ function clientIp(req) {
   return (fwd ? String(fwd).split(',')[0] : req.headers['x-real-ip'] || req.socket?.remoteAddress || 'unknown').trim();
 }
 
-/** Best-effort, per-instance limiter. The hard spend cap is the Anthropic Console spend limit. */
+/** Best-effort, per-instance limiter. The real cap is the Gemini free-tier quota. */
 function createRateLimiter({ requests, windowMs }) {
   const hits = new Map();
   return function check(key, now = Date.now()) {
@@ -80,8 +88,8 @@ function createRateLimiter({ requests, windowMs }) {
 function validateMessages(messages) {
   if (!Array.isArray(messages) || !messages.length) return 'messages must be a non-empty array.';
   if (messages.length > MAX_MESSAGES) return `Conversation is too long (max ${MAX_MESSAGES} messages). Start a new conversation.`;
-  if (messages[0].role !== 'user') return 'The first message must come from the user.';
-  if (messages[messages.length - 1].role !== 'user') return 'The last message must come from the user.';
+  if (messages[0]?.role !== 'user') return 'The first message must come from the user.';
+  if (messages[messages.length - 1]?.role !== 'user') return 'The last message must come from the user.';
   for (const m of messages) {
     if (!m || (m.role !== 'user' && m.role !== 'assistant')) return 'Each message role must be user or assistant.';
     if (typeof m.content === 'string') {
@@ -89,45 +97,110 @@ function validateMessages(messages) {
       continue;
     }
     if (!Array.isArray(m.content) || !m.content.length) return 'Each message needs content.';
+    const allowed = m.role === 'user' ? ['text', 'tool_result'] : ['text', 'tool_use', 'thought', 'raw'];
     for (const block of m.content) {
-      if (!block || typeof block.type !== 'string') return 'Invalid content block.';
-      if (m.role === 'user') {
-        if (block.type === 'text' && String(block.text || '').length > MAX_USER_TEXT) return `Messages are limited to ${MAX_USER_TEXT} characters.`;
-        if (!['text', 'tool_result'].includes(block.type)) return `Unsupported user content type: ${block.type}.`;
-      }
+      if (!block || !allowed.includes(block.type)) return `Unsupported ${m.role} content type: ${block?.type}.`;
+      if (m.role === 'user' && block.type === 'text' && String(block.text || '').length > MAX_USER_TEXT) return `Messages are limited to ${MAX_USER_TEXT} characters.`;
+      if (block.type === 'tool_use' && (typeof block.name !== 'string' || typeof block.id !== 'string')) return 'tool_use blocks need an id and a name.';
+      if (block.type === 'tool_result' && typeof block.tool_use_id !== 'string') return 'tool_result blocks need a tool_use_id.';
     }
   }
   return null;
 }
 
+// ---------- Format conversion ----------
+function withSignature(part, block) { return block.signature ? { ...part, thoughtSignature: block.signature } : part; }
+
+function parseToolOutput(content) {
+  if (typeof content !== 'string') return content ?? null;
+  try { return JSON.parse(content); } catch { return content; }
+}
+
+/** Browser history -> Gemini contents. Deterministic, so earlier turns render identically on every request. */
+function toGeminiContents(messages) {
+  const toolNames = new Map();
+  const contents = [];
+  for (const m of messages) {
+    const blocks = typeof m.content === 'string' ? [{ type: 'text', text: m.content }] : m.content;
+    const parts = blocks.map(block => {
+      switch (block.type) {
+        case 'text': return withSignature({ text: block.text }, block);
+        case 'thought': return withSignature({ text: block.text, thought: true }, block);
+        case 'raw': return block.part;
+        case 'tool_use': {
+          toolNames.set(block.id, block.name);
+          const call = { name: block.name, args: block.input || {} };
+          if (!block.id.startsWith(GENERATED_ID)) call.id = block.id;
+          return withSignature({ functionCall: call }, block);
+        }
+        case 'tool_result': {
+          const fr = { name: toolNames.get(block.tool_use_id) || 'unknown_tool',
+            response: block.is_error ? { error: String(block.content) } : { output: parseToolOutput(block.content) } };
+          if (!block.tool_use_id.startsWith(GENERATED_ID)) fr.id = block.tool_use_id;
+          return { functionResponse: fr };
+        }
+      }
+      return null;
+    }).filter(Boolean);
+    const role = m.role === 'assistant' ? 'model' : 'user';
+    const prev = contents[contents.length - 1];
+    if (prev && prev.role === role) prev.parts.push(...parts);
+    else contents.push({ role, parts });
+  }
+  return contents;
+}
+
+/** Gemini response -> browser blocks + a provider-neutral stop reason. */
+function fromGeminiResponse(response) {
+  const candidate = response.candidates?.[0];
+  const parts = candidate?.content?.parts || [];
+  const content = parts.map((part, i) => {
+    const sig = part.thoughtSignature ? { signature: part.thoughtSignature } : {};
+    if (part.functionCall) {
+      const fc = part.functionCall;
+      return { type: 'tool_use', id: fc.id || `${GENERATED_ID}${response.responseId || 'r'}_${i}`, name: fc.name, input: fc.args || {}, ...sig };
+    }
+    if (typeof part.text === 'string') return { type: part.thought ? 'thought' : 'text', text: part.text, ...sig };
+    return { type: 'raw', part };
+  });
+  const reason = candidate?.finishReason;
+  let stop_reason;
+  if (response.promptFeedback?.blockReason || REFUSAL_REASONS.has(reason)) stop_reason = 'refusal';
+  else if (!content.length) stop_reason = 'error';
+  else if (content.some(b => b.type === 'tool_use')) stop_reason = 'tool_use';
+  else if (reason === 'MAX_TOKENS') stop_reason = 'max_tokens';
+  else if (reason && reason !== 'STOP') stop_reason = 'error'; // e.g. MALFORMED_FUNCTION_CALL
+  else stop_reason = 'end_turn';
+  return { content, stop_reason, finish_reason: reason || null };
+}
+
 /** Maps SDK errors to responses that never echo upstream messages (which could carry request details). */
 function mapError(err) {
-  if (err instanceof Anthropic.APIError) {
-    const status = err.status;
-    const type = err.type || err.error?.error?.type;
-    // A spent workspace limit or empty balance is a 402 billing_error; older responses used a 400
-    // with a credit-balance message, so that wording is matched as well.
-    if (status === 402 || type === 'billing_error' || (status === 400 && /credit balance|spend(ing)? limit|usage limit/i.test(err.message || ''))) {
+  const status = err instanceof ApiError ? err.status : null;
+  const message = String(err?.message || '');
+  if (status === 429) {
+    // A spent daily free-tier quota (or a billing spend cap) means the advisor is done for now;
+    // a per-minute limit is temporary.
+    if (/per.?day|daily|spend|billing|prepayment|credits/i.test(message)) {
       return [402, { code: 'limit_reached', error: 'The AI advisor has reached its demo usage limit.' }];
     }
-    if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
-      return [503, { code: 'not_configured', error: 'The AI advisor is not configured correctly.' }];
-    }
-    if (err instanceof Anthropic.RateLimitError) {
-      const retry = Number(err.headers?.get?.('retry-after')) || 30;
-      return [429, { code: 'rate_limited', error: 'The AI advisor is busy. Try again shortly.', retryAfter: retry }, { 'Retry-After': String(retry) }];
-    }
-    if (err instanceof Anthropic.BadRequestError) {
-      return [400, { code: 'bad_request', error: 'The conversation could not be processed. Start a new conversation.' }];
-    }
-    if (err instanceof Anthropic.APIConnectionError) {
-      return [502, { code: 'upstream_unreachable', error: 'Could not reach the AI service.' }];
-    }
-    if (status === 529 || status >= 500) {
-      return [503, { code: 'upstream_busy', error: 'The AI service is temporarily unavailable.' }];
-    }
+    return [429, { code: 'rate_limited', error: 'The AI advisor is busy. Try again shortly.', retryAfter: 30 }, { 'Retry-After': '30' }];
+  }
+  if (status === 401 || status === 403 || (status === 400 && /api key/i.test(message))) {
+    return [503, { code: 'not_configured', error: 'The AI advisor is not configured correctly.' }];
+  }
+  if (status === 400 || status === 404) {
+    return [400, { code: 'bad_request', error: 'The conversation could not be processed. Start a new conversation.' }];
+  }
+  if (status >= 500) return [503, { code: 'upstream_busy', error: 'The AI service is temporarily unavailable.' }];
+  if (!status && /fetch failed|network|ECONN|ENOTFOUND|timed? ?out|abort/i.test(message)) {
+    return [502, { code: 'upstream_unreachable', error: 'Could not reach the AI service.' }];
   }
   return [502, { code: 'upstream_error', error: 'The AI advisor could not answer right now.' }];
+}
+
+function thinkingLevel(value) {
+  return ThinkingLevel[String(value || THINKING_LEVEL).toUpperCase()] || ThinkingLevel.LOW;
 }
 
 function createHandler({ client, env = process.env, rateLimiter = createRateLimiter(RATE_LIMIT) } = {}) {
@@ -138,7 +211,7 @@ function createHandler({ client, env = process.env, rateLimiter = createRateLimi
     if (env.ADVISOR_DISABLED === '1' || env.ADVISOR_DISABLED === 'true') {
       return send(res, 402, { code: 'limit_reached', error: 'The AI advisor has reached its demo usage limit.' });
     }
-    if (!lazyClient && !env.ANTHROPIC_API_KEY) return send(res, 503, { code: 'not_configured', error: 'The AI advisor is not configured.' });
+    if (!lazyClient && !env.GEMINI_API_KEY) return send(res, 503, { code: 'not_configured', error: 'The AI advisor is not configured.' });
 
     const limit = rateLimiter(clientIp(req));
     if (!limit.ok) return send(res, 429, { code: 'rate_limited', error: 'Too many requests. Try again shortly.', retryAfter: limit.retryAfter }, { 'Retry-After': String(limit.retryAfter) });
@@ -150,26 +223,24 @@ function createHandler({ client, env = process.env, rateLimiter = createRateLimi
     const invalid = validateMessages(body.messages);
     if (invalid) return send(res, 400, { code: 'bad_request', error: invalid });
 
-    lazyClient ||= new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, timeout: 55_000, maxRetries: 1 });
+    lazyClient ||= new GoogleGenAI({ apiKey: env.GEMINI_API_KEY, httpOptions: { timeout: 55_000 } });
     try {
-      const response = await lazyClient.messages.create({
+      const response = await lazyClient.models.generateContent({
         model: env.ADVISOR_MODEL || MODEL,
-        max_tokens: MAX_TOKENS,
-        output_config: { effort: env.ADVISOR_EFFORT || EFFORT },
-        cache_control: { type: 'ephemeral' },
-        system: SYSTEM_PROMPT,
-        tools: TOOLS,
-        messages: body.messages,
+        contents: toGeminiContents(body.messages),
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          tools: [{ functionDeclarations: FUNCTION_DECLARATIONS }],
+          toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.AUTO } },
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
+          thinkingConfig: { thinkingLevel: thinkingLevel(env.GEMINI_THINKING_LEVEL) },
+        },
       });
-      return send(res, 200, {
-        content: response.content,
-        stop_reason: response.stop_reason,
-        stop_details: response.stop_details || null,
-        usage: response.usage,
-      });
+      const out = fromGeminiResponse(response);
+      return send(res, 200, { ...out, usage: response.usageMetadata || null });
     } catch (err) {
       const [status, payload, headers] = mapError(err);
-      console.error('[advisor] upstream error', err?.status, err?.type || err?.name);
+      console.error('[advisor] upstream error', err?.status || err?.name);
       return send(res, status, payload, headers);
     }
   };
@@ -179,3 +250,5 @@ module.exports = createHandler();
 module.exports.createHandler = createHandler;
 module.exports.SYSTEM_PROMPT = SYSTEM_PROMPT;
 module.exports.validateMessages = validateMessages;
+module.exports.toGeminiContents = toGeminiContents;
+module.exports.fromGeminiResponse = fromGeminiResponse;

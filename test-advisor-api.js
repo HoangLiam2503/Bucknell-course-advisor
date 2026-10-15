@@ -1,17 +1,17 @@
 const assert = require('node:assert/strict');
-const Anthropic = require('@anthropic-ai/sdk').default;
-const { createHandler, SYSTEM_PROMPT } = require('./api/advisor.js');
+const { ApiError } = require('@google/genai');
+const { createHandler, SYSTEM_PROMPT, toGeminiContents, fromGeminiResponse } = require('./api/advisor.js');
 const AdvisorTools = require('./advisor-tools.js');
 const Advisor = require('./engine.js');
 
-const KEY = 'sk-ant-test-not-a-real-key';
-const ENV = { ANTHROPIC_API_KEY: KEY };
+const KEY = 'AIza-test-not-a-real-key';
+const ENV = { GEMINI_API_KEY: KEY };
 
 function fakeClient(impl) {
   const calls = [];
-  return { calls, messages: { create: async (params) => { calls.push(params); return impl(params); } } };
+  return { calls, models: { generateContent: async (params) => { calls.push(params); return impl(params); } } };
 }
-const okResponse = () => ({ content: [{ type: 'text', text: 'Hi Liam.' }], stop_reason: 'end_turn', usage: { input_tokens: 10, output_tokens: 3 } });
+const okResponse = () => ({ responseId: 'r1', candidates: [{ content: { role: 'model', parts: [{ text: 'Hi Liam.' }] }, finishReason: 'STOP' }], usageMetadata: { totalTokenCount: 5 } });
 
 function request({ method = 'POST', origin = 'https://bucknell-course-advisor.vercel.app', host = 'bucknell-course-advisor.vercel.app', body, ip = '1.2.3.4' } = {}) {
   const headers = { host, 'x-forwarded-for': ip };
@@ -39,7 +39,40 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
   }
   assert.deepEqual([...AdvisorTools.TAGS].sort(), Object.keys(Advisor.TAG_LABEL).sort(), 'tag enum matches engine tags');
   assert.deepEqual(AdvisorTools.TOOLS.filter(t => t.kind === 'gated').map(t => t.name).sort(), ['drop_course', 'join_waitlist', 'register_course']);
-  assert.deepEqual(Object.keys(AdvisorTools.forClaude()[0]), ['name', 'description', 'input_schema']);
+  assert.deepEqual(Object.keys(AdvisorTools.forGemini()[0]), ['name', 'description', 'parametersJsonSchema']);
+
+  // Format conversion: Gemini parts round-trip with thought signatures intact
+  const gemini = { responseId: 'abc', candidates: [{ finishReason: 'STOP', content: { role: 'model', parts: [
+    { text: 'Let me build that.', thoughtSignature: 'sigA' },
+    { functionCall: { id: 'fc_1', name: 'build_schedule', args: { maxCredits: 15 } }, thoughtSignature: 'sigB' },
+    { functionCall: { name: 'get_degree_audit', args: {} } },
+  ] } }] };
+  const out = fromGeminiResponse(gemini);
+  assert.equal(out.stop_reason, 'tool_use');
+  assert.deepEqual(out.content[0], { type: 'text', text: 'Let me build that.', signature: 'sigA' });
+  assert.deepEqual(out.content[1], { type: 'tool_use', id: 'fc_1', name: 'build_schedule', input: { maxCredits: 15 }, signature: 'sigB' });
+  assert.match(out.content[2].id, /^gen_abc_2$/, 'missing call ids are generated');
+  const history = [
+    { role: 'user', content: [{ type: 'text', text: '[Portal context] Today is 2026-10-14.' }, { type: 'text', text: 'Plan my semester' }] },
+    { role: 'assistant', content: out.content },
+    { role: 'user', content: [
+      { type: 'tool_result', tool_use_id: 'fc_1', content: '{"status":"draft"}' },
+      { type: 'tool_result', tool_use_id: out.content[2].id, content: 'Tool failed: boom', is_error: true }] },
+    { role: 'user', content: [{ type: 'text', text: 'thanks' }] },
+  ];
+  const contents = toGeminiContents(history);
+  assert.deepEqual(contents[1], { role: 'model', parts: gemini.candidates[0].content.parts }, 'model turn is replayed exactly as received');
+  assert.equal(contents.length, 3, 'consecutive user messages merge into one turn');
+  assert.deepEqual(contents[2].parts[0], { functionResponse: { id: 'fc_1', name: 'build_schedule', response: { output: { status: 'draft' } } } });
+  assert.deepEqual(contents[2].parts[1], { functionResponse: { name: 'get_degree_audit', response: { error: 'Tool failed: boom' } } }, 'generated ids are not sent back');
+  assert.deepEqual(contents[2].parts[2], { text: 'thanks' });
+  assert.deepEqual(toGeminiContents(history), contents, 'conversion is deterministic');
+
+  assert.equal(fromGeminiResponse({ candidates: [{ finishReason: 'SAFETY', content: { parts: [] } }] }).stop_reason, 'refusal');
+  assert.equal(fromGeminiResponse({ promptFeedback: { blockReason: 'PROHIBITED_CONTENT' } }).stop_reason, 'refusal');
+  assert.equal(fromGeminiResponse({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: 'partial' }] } }] }).stop_reason, 'max_tokens');
+  assert.equal(fromGeminiResponse({ candidates: [{ finishReason: 'MALFORMED_FUNCTION_CALL', content: { parts: [{ text: '' }] } }] }).stop_reason, 'error');
+  assert.equal(fromGeminiResponse({ candidates: [{ finishReason: 'STOP' }] }).stop_reason, 'error', 'empty turn is an error, never stored');
 
   // Request handling
   const client = fakeClient(okResponse);
@@ -52,7 +85,8 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
 
   for (const bad of [{}, { messages: [] }, { messages: [{ role: 'assistant', content: 'hi' }] }, { messages: [{ role: 'system', content: 'x' }] },
     { messages: [{ role: 'user', content: 'x'.repeat(2001) }] }, { messages: [{ role: 'user', content: [{ type: 'image', source: {} }] }] },
-    { messages: [...convo, { role: 'assistant', content: [{ type: 'text', text: 'ok' }] }] }]) {
+    { messages: [...convo, { role: 'assistant', content: [{ type: 'text', text: 'ok' }] }] },
+    { messages: [...convo, { role: 'assistant', content: [{ type: 'tool_use', name: 'x' }] }, { role: 'user', content: 'y' }] }]) {
     const res = await call(handler, request({ body: bad }));
     assert.equal(res.statusCode, 400, `rejects ${JSON.stringify(bad).slice(0, 60)}`);
   }
@@ -60,26 +94,24 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
   assert.equal((await call(handler, request({ body: { messages: Array.from({ length: 81 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: 'x' })) } }))).statusCode, 400);
 
   client.calls.length = 0;
-  const history = [
-    { role: 'user', content: [{ type: 'text', text: '[Portal context] Today is 2026-10-14.' }, { type: 'text', text: 'Plan my semester' }] },
-    { role: 'assistant', content: [{ type: 'thinking', thinking: '', signature: 'sig-abc' }, { type: 'tool_use', id: 'tu_1', name: 'build_schedule', input: { maxCredits: 15 } }] },
-    { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_1', content: '{"status":"draft"}' }] },
-  ];
-  const snapshot = JSON.stringify(history);
   const ok = await call(handler, request({ body: { messages: history } }));
   assert.equal(ok.statusCode, 200);
   assert.deepEqual(ok.json().content, [{ type: 'text', text: 'Hi Liam.' }]);
+  assert.equal(ok.json().stop_reason, 'end_turn');
   const sent = client.calls[0];
-  assert.equal(sent.model, 'claude-sonnet-5-5');
-  assert.deepEqual(sent.output_config, { effort: 'medium' });
-  assert.deepEqual(sent.cache_control, { type: 'ephemeral' });
-  assert.equal(sent.system, SYSTEM_PROMPT);
-  assert.deepEqual(sent.tools, AdvisorTools.forClaude());
-  assert.equal(sent.thinking, undefined, 'thinking is left to the model default');
-  assert.equal(sent.fallbacks, undefined, 'no fallback to a pricier model');
-  assert.equal(sent.betas, undefined);
-  assert.equal(JSON.stringify(sent.messages), snapshot, 'history is forwarded unchanged (append-only)');
-  assert.doesNotMatch(SYSTEM_PROMPT, /\d{4}-\d{2}-\d{2}/, 'system prompt carries no date, so the cached prefix stays stable');
+  assert.equal(sent.model, 'gemini-3.8-flash');
+  assert.deepEqual(sent.contents, contents);
+  assert.equal(sent.config.systemInstruction, SYSTEM_PROMPT);
+  assert.deepEqual(sent.config.tools, [{ functionDeclarations: AdvisorTools.forGemini() }]);
+  assert.equal(sent.config.toolConfig.functionCallingConfig.mode, 'AUTO');
+  assert.equal(sent.config.thinkingConfig.thinkingLevel, 'LOW');
+  assert.equal(sent.config.maxOutputTokens, 8192);
+  assert.doesNotMatch(SYSTEM_PROMPT, /\d{4}-\d{2}-\d{2}/, 'system prompt carries no date, so the prefix stays stable');
+
+  const custom = fakeClient(okResponse);
+  await call(createHandler({ client: custom, env: { ...ENV, ADVISOR_MODEL: 'gemini-3.5-flash-lite', GEMINI_THINKING_LEVEL: 'minimal' } }), request({ body: { messages: convo } }));
+  assert.equal(custom.calls[0].model, 'gemini-3.5-flash-lite');
+  assert.equal(custom.calls[0].config.thinkingConfig.thinkingLevel, 'MINIMAL');
 
   // Usage limit: kill switch never reaches the API
   const killClient = fakeClient(okResponse);
@@ -94,15 +126,15 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
   assert.equal(noKey.json().code, 'not_configured');
 
   // Upstream errors map to stable codes and never echo upstream text
-  const headers = new Headers({ 'retry-after': '12' });
+  const apiErr = (status, message) => new ApiError({ status, message });
   const cases = [
-    [Anthropic.APIError.generate(402, { error: { type: 'billing_error', message: `spend limit for ${KEY}` } }, `402 spend limit for ${KEY}`, headers), 402, 'limit_reached'],
-    [Anthropic.APIError.generate(400, { error: { type: 'invalid_request_error', message: 'Your credit balance is too low' } }, 'Your credit balance is too low', headers), 402, 'limit_reached'],
-    [Anthropic.APIError.generate(401, { error: { type: 'authentication_error', message: 'invalid x-api-key' } }, `invalid ${KEY}`, headers), 503, 'not_configured'],
-    [Anthropic.APIError.generate(429, { error: { type: 'rate_limit_error', message: 'slow down' } }, 'slow down', headers), 429, 'rate_limited'],
-    [Anthropic.APIError.generate(529, { error: { type: 'overloaded_error', message: 'busy' } }, 'busy', headers), 503, 'upstream_busy'],
-    [Anthropic.APIError.generate(400, { error: { type: 'invalid_request_error', message: 'bad thinking block' } }, 'bad thinking block', headers), 400, 'bad_request'],
-    [new Anthropic.APIConnectionError({ message: 'socket hang up' }), 502, 'upstream_unreachable'],
+    [apiErr(429, `RESOURCE_EXHAUSTED: Quota exceeded for metric generate_content_free_tier_requests, limit: GenerateRequestsPerDayPerProjectPerModel-FreeTier key=${KEY}`), 402, 'limit_reached'],
+    [apiErr(429, 'RESOURCE_EXHAUSTED: Quota exceeded for metric generate_content_free_tier_requests, limit: GenerateRequestsPerMinutePerProjectPerModel-FreeTier'), 429, 'rate_limited'],
+    [apiErr(400, `API key not valid. Please pass a valid API key. ${KEY}`), 503, 'not_configured'],
+    [apiErr(403, 'PERMISSION_DENIED'), 503, 'not_configured'],
+    [apiErr(400, 'INVALID_ARGUMENT: Function call is missing a thought_signature'), 400, 'bad_request'],
+    [apiErr(503, 'UNAVAILABLE: model overloaded'), 503, 'upstream_busy'],
+    [new TypeError('fetch failed'), 502, 'upstream_unreachable'],
     [new Error('boom'), 502, 'upstream_error'],
   ];
   const origError = console.error; console.error = () => {};
@@ -111,11 +143,8 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
     const res = await call(h, request({ body: { messages: convo } }));
     assert.equal(res.statusCode, status, `${code} status`);
     assert.equal(res.json().code, code);
-    assert.doesNotMatch(res.body, /sk-ant|x-api-key|spend limit for/, 'no upstream details leak');
+    assert.doesNotMatch(res.body, /AIza|Quota exceeded|API key not valid/, 'no upstream details leak');
   }
-  console.error = origError;
-  const limited = await call(createHandler({ client: fakeClient(() => { throw cases[3][0]; }), env: ENV }), request({ body: { messages: convo } }));
-  assert.equal(limited.headers['retry-after'], '12');
 
   // Rate limit per IP
   const rl = createHandler({ client: fakeClient(okResponse), env: ENV });
@@ -124,6 +153,7 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
   assert.equal(last.statusCode, 429);
   assert.ok(Number(last.headers['retry-after']) > 0);
   assert.equal((await call(rl, request({ body: { messages: convo }, ip: '8.8.8.8' }))).statusCode, 200, 'other IPs unaffected');
+  console.error = origError;
 
   console.log('Advisor API checks passed.');
 })().catch(err => { console.error(err); process.exit(1); });
