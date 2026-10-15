@@ -1,0 +1,16 @@
+{
+  "name": "bucknell-course-advisor",
+  "private": true,
+  "description": "Bucknell course registration portal prototype with an in-portal Claude academic advisor and WebMCP tools.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vercel dev",
+    "test": "node test-phase1.js && node test-advisor-api.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0"
+  }
+}

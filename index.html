@@ -331,7 +331,7 @@
   .agent-hit{ animation:pulse 950ms ease-out; border-color:var(--blue) !important; }
 
   /* Modal */
-  .ov{position:fixed; inset:0; background:rgba(6,10,18,.75); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:20px; z-index:20;}
+  .ov{position:fixed; inset:0; background:rgba(6,10,18,.75); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:20px; z-index:40;}
   .ov.show{display:flex;}
   .modal{background:var(--panel); border:1px solid var(--line); border-radius:12px; max-width:490px; width:100%; padding:24px;}
   .modal h3{font-size:18px; font-weight:600; margin:0 0 6px;}
@@ -365,8 +365,49 @@
   .advisor-inputrow{display:flex;gap:8px;align-items:flex-end;}
   .advisor-input{min-height:40px;max-height:92px;resize:none;flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font:inherit;font-size:12.5px;padding:10px 11px;}
   .advisor-send{width:40px;height:40px;border-radius:8px;border:0;background:var(--orange);color:#12161F;cursor:pointer;font-size:17px;}
-  .advisor-send:disabled{opacity:.45;cursor:wait;}
+  .advisor-send:disabled{opacity:.45;cursor:not-allowed;}
+  .advisor-send.stop{background:var(--raised);color:var(--text);border:1px solid var(--line);font-size:13px;}
+  .advisor-input:disabled{opacity:.6;}
   .advisor-disclaimer{font-size:9.5px;color:var(--text-3);margin-top:7px;line-height:1.4;}
+  .advisor-reset{border:0;background:transparent;color:var(--text-3);font-size:16px;cursor:pointer;padding:3px 6px;line-height:1;}
+  .advisor-reset:hover{color:var(--text);}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .advisor-chip:disabled{opacity:.45;cursor:not-allowed;}
+  .advisor-notice{align-self:stretch;font-size:11.5px;line-height:1.45;color:var(--text-2);padding:7px 10px;border-radius:8px;border:1px dashed var(--line);}
+  .advisor-notice.warn{border-color:rgba(217,160,54,.5);color:var(--amber);background:var(--amber-bg);border-style:solid;}
+  .advisor-notice.error{border-color:rgba(217,97,74,.5);color:#E8907F;background:var(--red-bg);border-style:solid;}
+  .advisor-notice.ok{border-color:rgba(62,175,124,.5);color:var(--green);background:var(--green-bg);border-style:solid;}
+  .advisor-typing{align-self:flex-start;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-3);padding:4px 2px;}
+  .advisor-typing .dots{display:inline-flex;gap:3px;}
+  .advisor-typing .dots i{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:advDot 1.1s infinite ease-in-out;}
+  .advisor-typing .dots i:nth-child(2){animation-delay:.15s;} .advisor-typing .dots i:nth-child(3){animation-delay:.3s;}
+  @keyframes advDot{0%,80%,100%{opacity:.25;transform:translateY(0);}40%{opacity:1;transform:translateY(-2px);}}
+  @media(prefers-reduced-motion:reduce){.advisor-typing .dots i{animation:none;opacity:.7;}}
+  .advisor-card{align-self:stretch;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:10px 11px;font-size:12px;}
+  .advisor-card .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10.5px;color:var(--text-3);margin-bottom:7px;}
+  .advisor-card .kind{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:4px;}
+  .advisor-card .kind.draft{background:var(--blue-bg);color:#8BB7F0;}
+  .advisor-card .kind.rec{background:var(--orange-bg);color:var(--orange);}
+  .advisor-card .kind.gated{background:var(--amber-bg);color:var(--amber);}
+  .advisor-card ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .advisor-card li{padding-bottom:8px;border-bottom:1px solid var(--line-soft);}
+  .advisor-card li:last-child{border-bottom:0;padding-bottom:0;}
+  .advisor-card .row{display:flex;align-items:baseline;gap:6px;}
+  .advisor-card .row b{font-weight:500;color:var(--text);flex:1;min-width:0;}
+  .advisor-card code{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--orange);}
+  .advisor-card .cr{font-size:10.5px;color:var(--text-3);white-space:nowrap;}
+  .advisor-card .rank{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--text-3);}
+  .advisor-card .meta{font-size:10.5px;color:var(--text-3);margin-top:2px;}
+  .advisor-card .why{font-size:11px;color:var(--text-2);margin-top:3px;line-height:1.45;}
+  .advisor-card .warn{font-size:11px;color:var(--amber);margin-top:3px;line-height:1.45;}
+  .advisor-card .tag{display:inline-block;font-size:10px;margin-top:4px;padding:2px 6px;border-radius:4px;background:var(--raised);color:var(--text-2);}
+  .advisor-card .tag.required{background:var(--green-bg);color:var(--green);}
+  .advisor-card .tag.elective{background:var(--blue-bg);color:#8BB7F0;}
+  .advisor-card .body{margin:0 0 8px;color:var(--text-2);line-height:1.5;}
+  .advisor-card .src{margin:8px 0 0;font-size:10px;color:var(--text-3);line-height:1.4;}
+  .advisor-card .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;}
+  .advisor-card li .acts{margin-top:6px;}
+  .advisor-card .btn:disabled{opacity:.5;cursor:not-allowed;}
   @media(max-width:640px){.advisor-panel{right:8px;bottom:8px;width:calc(100vw - 16px);height:calc(100vh - 16px);}}
 </style>
 </head>
@@ -526,20 +567,21 @@
 <aside class="advisor-panel" id="advisorPanel" aria-label="AI academic advisor" aria-hidden="true">
   <div class="advisor-head">
     <div class="advisor-mark">AI</div>
-    <div class="copy"><b>Ask AI Advisor</b><span>Optional · works inside the portal</span></div>
-    <button class="advisor-close" id="advisorClose" aria-label="Close AI advisor">×</button>
+    <div class="copy"><b>Ask AI Advisor</b><span>Powered by Claude · drafts only, you confirm changes</span></div>
+    <button type="button" class="advisor-reset" id="advisorReset" aria-label="Start a new conversation" title="New conversation">↺</button>
+    <button type="button" class="advisor-close" id="advisorClose" aria-label="Close AI advisor">×</button>
   </div>
   <div class="advisor-thread" id="advisorThread" aria-live="polite">
-    <div class="advisor-msg ai">Hi Liam — I can review your degree requirements, build a conflict-free draft, compare courses, or prepare registration. You always confirm enrollment changes.</div>
+    <div class="advisor-msg ai">Hi Liam — tell me what you want from next semester in your own words. I’ll check your requirements, prerequisites, conflicts, workload and seats, then build a draft for you to review. I never register you — you confirm every change.</div>
     <div class="advisor-chips">
-      <button class="advisor-chip" data-advisor-prompt="Review my remaining degree requirements">Review requirements</button>
-      <button class="advisor-chip" data-advisor-prompt="Build a schedule with max 15 credits, nothing before 10am, prioritize AI and cybersecurity">Build a schedule</button>
-      <button class="advisor-chip" data-advisor-prompt="Show official Spring recommendations">Spring recommendations</button>
+      <button type="button" class="advisor-chip" data-advisor-prompt="Plan my next semester, max 15 credits, nothing before 10am, prioritize AI and cybersecurity.">Plan my semester</button>
+      <button type="button" class="advisor-chip" data-advisor-prompt="What degree requirements do I still have left?">Remaining requirements</button>
+      <button type="button" class="advisor-chip" data-advisor-prompt="Which official Spring 2026–27 courses should I consider, and why?">Spring recommendations</button>
     </div>
   </div>
   <form class="advisor-compose" id="advisorForm">
-    <div class="advisor-inputrow"><textarea class="advisor-input" id="advisorInput" rows="1" placeholder="Ask about courses, requirements or your schedule…"></textarea><button class="advisor-send" id="advisorSend" aria-label="Send message">↑</button></div>
-    <div class="advisor-disclaimer">Demo advisor. Official registration rules are rechecked by the portal; no course is added without your confirmation.</div>
+    <div class="advisor-inputrow"><label class="sr-only" for="advisorInput">Message the AI advisor</label><textarea class="advisor-input" id="advisorInput" rows="1" maxlength="2000" placeholder="Ask about courses, requirements or your schedule…"></textarea><button class="advisor-send" id="advisorSend" aria-label="Send message">↑</button></div>
+    <div class="advisor-disclaimer">AI-generated advice using a demo profile, demo Fall catalog and a saved Spring 2026–27 snapshot — not live data. Verify with your academic advisor. Nothing is registered without your confirmation.</div>
   </form>
 </aside>
 
@@ -561,7 +603,9 @@
 
 <script src="engine.js"></script>
 <script src="phase1-recommender.js"></script>
+<script src="advisor-tools.js"></script>
 <script type="module">
+import { createAdvisorChat } from './advisor-chat.js';
 try { if (!('modelContext' in document)) { const { initializeWebMCPPolyfill } = await import('https://esm.sh/@mcp-b/webmcp-polyfill'); initializeWebMCPPolyfill(); } }
 catch (e) { console.warn('WebMCP polyfill unavailable; native support only.', e); }
 
@@ -1041,14 +1085,6 @@ function setAdvisorOpen(open){
   if(open) setTimeout(()=>$('advisorInput').focus(),0);
 }
 
-function advisorMessage(role,message){
-  const el=document.createElement('div');
-  el.className=`advisor-msg ${role}`;
-  el.textContent=message;
-  $('advisorThread').appendChild(el);
-  $('advisorThread').scrollTop=$('advisorThread').scrollHeight;
-}
-
 function parseAdvisorPlan(prompt){
   const lower=prompt.toLowerCase();
   const creditMatch=lower.match(/(?:max(?:imum)?|tối đa)\s*(\d{1,2})/);
@@ -1098,14 +1134,6 @@ async function handleAdvisorPrompt(prompt){
   return 'I can help with four things in this prototype: review degree requirements, show official Spring recommendations, build a schedule draft, or prepare registration for a draft. Try asking: “Build a schedule with nothing before 10am and prioritize AI.”';
 }
 
-async function submitAdvisorPrompt(prompt){
-  const clean=prompt.trim(); if(!clean) return;
-  advisorMessage('user',clean); $('advisorInput').value=''; $('advisorSend').disabled=true;
-  try{advisorMessage('ai',await handleAdvisorPrompt(clean));}
-  catch(error){console.error(error);advisorMessage('ai','I could not complete that request. Please try again or use the portal controls.');}
-  finally{$('advisorSend').disabled=false;$('advisorInput').focus();}
-}
-
 // ---------- Wiring ----------
 $('q').addEventListener('input',renderCatalog);
 $('onlyEligible').addEventListener('change',renderCatalog);
@@ -1113,9 +1141,6 @@ $('resetBtn').addEventListener('click',resetDemo);
 $('planBtn').addEventListener('click',()=>doBuildSchedule({},'human'));
 $('advisorBtn').addEventListener('click',()=>setAdvisorOpen(true));
 $('advisorClose').addEventListener('click',()=>setAdvisorOpen(false));
-$('advisorForm').addEventListener('submit',event=>{event.preventDefault();submitAdvisorPrompt($('advisorInput').value);});
-$('advisorInput').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('advisorForm').requestSubmit();}});
-document.querySelectorAll('[data-advisor-prompt]').forEach(button=>button.addEventListener('click',()=>submitAdvisorPrompt(button.dataset.advisorPrompt)));
 $('deptbar').addEventListener('click',e=>{const b=e.target.closest('[data-dept]'); if(!b)return;
   state.activeDept=state.activeDept===b.dataset.dept?null:b.dataset.dept; renderDepts(); renderCatalog();});
 document.addEventListener('click',e=>{
@@ -1131,155 +1156,178 @@ document.addEventListener('click',e=>{
 renderAll();
 showView(location.hash.slice(1)||'registration');
 
-// ---------- WebMCP ----------
+// ---------- Tools: one handler map shared by WebMCP and the in-portal advisor ----------
 const text=t=>({content:[{type:'text',text:typeof t==='string'?t:JSON.stringify(t,null,2)}]});
 const brief=r=>({code:r.course.code,title:r.course.title,instructor:r.course.instructor,credits:r.course.credits,
   schedule:A.describeSchedule(r.course),room:r.course.room,seatsOpen:r.course.seats,capacity:r.course.capacity,
   waitlist:r.course.waitlist,status:r.status,eligible:r.eligible,reasons:r.reasons,blockers:r.blockers});
+const DEMO_SOURCE='Demo Fall 2026 sample catalog for this prototype — not official Bucknell data.';
+const SNAPSHOT_SOURCE='Official Bucknell Course Information snapshot for Spring 2026–27 (term 202705) — a saved copy, not live; seats may have changed.';
+const normCode=c=>String(c||'').toUpperCase().replace(/\s+/g,'');
+const regCredits=()=>state.registered.reduce((s,c)=>s+c.credits,0);
+
+function draftSummary(){
+  const pr=state.proposal; if(!pr||!pr.plan.length) return null;
+  const load=A.workloadSummary(pr.plan);
+  return {status:'draft — no seats held',totalCredits:pr.totalCredits,weeklyHours:load.hours,workloadBand:load.band,
+    gradedProjects:load.projects,teamCourses:load.groupCourses,labCourses:load.labCourses,heaviest:load.heavyCourses,dataSource:DEMO_SOURCE,
+    courses:pr.plan.map(c=>{const role=A.requirementRole(c.code,state.profile,state.registered),w=A.workloadOf(c);
+      return {code:c.code,title:c.title,credits:c.credits,instructor:c.instructor,schedule:A.describeSchedule(c),seatsOpen:c.seats,
+        requirement:role.label,requirementKind:role.kind,weeklyHours:w.hours,workloadBand:w.band,groupProject:w.groupWork,labHours:w.labHours};})};
+}
+
+/** Pre-checks a registration request for the in-portal advisor; returns a blocker message or null. */
+function registrationBlocker(codes){
+  const courses=codes.map(A.findCourse), unknown=codes.filter((_,i)=>!courses[i]);
+  if(!codes.length) return 'No course codes were provided.';
+  if(unknown.length) return `Not in the Fall 2026 demo catalog: ${unknown.join(', ')}.`;
+  const blocked=courses.map(c=>A.evaluate(c,state.profile,state.registered)).filter(r=>!r.eligible);
+  if(blocked.length) return `Cannot register — ${blocked.map(r=>`${r.course.code}: ${r.blockers.join(' ')}`).join(' ')}`;
+  const total=regCredits()+courses.reduce((s,c)=>s+c.credits,0);
+  if(total>state.profile.maxCredits) return `This would reach ${total} credits, above the ${state.profile.maxCredits}-credit limit.`;
+  return null;
+}
+
+const TOOL_HANDLERS={
+  get_student_profile:async()=>{log('agent','read the student profile.'); flash($('stats'));
+    return {...state.profile,registeredCourses:state.registered.map(c=>c.code),note:'Demo student profile for this prototype.'};},
+
+  search_courses:async(args={})=>{
+    const res=A.searchCourses(state.profile,state.registered,args);
+    $('q').value=args.query||''; state.activeDept=args.department||null; $('onlyEligible').checked=!!args.onlyEligible;
+    renderDepts(); renderCatalog(); flash($('catalog').closest('.card'));
+    log('agent',`searched the catalog — ${res.length} results.`);
+    return {dataSource:DEMO_SOURCE,results:res.map(brief)};},
+
+  check_eligibility:async({courseCode})=>{
+    const c=A.findCourse(courseCode); if(!c) return {error:`No course with code ${courseCode} in the Fall 2026 demo catalog.`};
+    const r=A.evaluate(c,state.profile,state.registered);
+    const el=$('why-'+c.code); if(el){el.classList.add('show'); $('course-'+c.code).scrollIntoView({block:'center',behavior:'smooth'}); flash($('course-'+c.code));}
+    log('agent',`checked eligibility for ${c.code}: ${r.status}.`);
+    return {...brief(r),dataSource:DEMO_SOURCE};},
+
+  build_schedule:async(args={})=>{
+    const r=doBuildSchedule(args,'agent');
+    return {...(draftSummary()||{status:'no courses fit',totalCredits:0,courses:[],dataSource:DEMO_SOURCE}),
+      constraints:r.constraints,skipped:r.skipped,why:r.explanation.map(e=>({code:e.code,why:e.why})),
+      note:'Draft only — no seats are held. Use suggest_alternatives or swap_draft_course to change one course; register_course only when the student asks.'};},
+
+  suggest_alternatives:async({courseCode})=>{const r=doOfferAlternatives(courseCode,'agent'); return typeof r==='string'?{error:r}:{...r,dataSource:DEMO_SOURCE};},
+
+  swap_draft_course:async({remove,replaceWith})=>{const r=doSwap(remove,replaceWith||null,'agent'); return typeof r==='string'?{error:r}:{...r,dataSource:DEMO_SOURCE};},
+
+  explain_course_impact:async({courseCode})=>{
+    const c=A.findCourse(courseCode); if(!c) return {error:`No course with code ${courseCode} in the Fall 2026 demo catalog.`};
+    const role=A.requirementRole(c.code,state.profile,state.registered), w=A.workloadOf(c), d=A.deferralImpact(c.code,state.profile,state.registered);
+    log('agent',`explained how ${c.code} affects graduation progress.`);
+    const el=$('course-'+c.code); if(el){el.scrollIntoView({block:'center',behavior:'smooth'}); flash(el);}
+    return {code:c.code,title:c.title,requirement:role.label,requirementKind:role.kind,
+      weeklyHours:w.hours,workloadBand:w.band,projects:w.projects,groupProject:w.groupWork,labHours:w.labHours,workloadNote:w.note,
+      unlocks:d.blocks,deferringCosts:d.notes,dataSource:DEMO_SOURCE};},
+
+  // Gated: over WebMCP the dialog opens and the call waits; in the portal chat a card is shown instead.
+  register_course:async({courseCodes=[]},ctx={})=>{
+    const codes=[...new Set((courseCodes||[]).map(normCode))];
+    if(ctx.channel!=='chat') return requestRegistration(codes,'agent');
+    const blocker=registrationBlocker(codes); if(blocker) return {error:blocker};
+    const courses=codes.map(A.findCourse), total=regCredits()+courses.reduce((s,c)=>s+c.credits,0);
+    log('agent',`prepared registration for ${codes.join(', ')} — waiting for the student to review.`);
+    return {awaitingConfirmation:true,action:'register',courseCodes:codes,
+      summary:`Register for ${courses.map(c=>`${c.code} ${c.title} (${A.describeSchedule(c)})`).join('; ')}. Your load would be ${total} of ${state.profile.maxCredits} credits.`,
+      note:'A confirmation card is now shown to the student. Nothing is registered until they confirm it themselves.'};},
+
+  drop_course:async({courseCode},ctx={})=>{
+    if(ctx.channel!=='chat') return requestDrop(courseCode,'agent');
+    const c=state.registered.find(x=>x.code===normCode(courseCode)); if(!c) return {error:`${courseCode} is not a registered course.`};
+    log('agent',`prepared a drop request for ${c.code} — waiting for the student to review.`);
+    return {awaitingConfirmation:true,action:'drop',courseCode:c.code,summary:`Drop ${c.code} ${c.title}. Your seat would be released.`,
+      note:'A confirmation card is now shown to the student. Nothing changes until they confirm it themselves.'};},
+
+  join_waitlist:async({courseCode,leave},ctx={})=>{
+    if(ctx.channel!=='chat') return doWaitlist(courseCode,'agent',!!leave);
+    const c=A.findCourse(courseCode); if(!c) return {error:`No course with code ${courseCode}.`};
+    if(!leave&&c.seats>0) return {error:`${c.code} still has ${c.seats} open seats — register instead of joining the waitlist.`};
+    if(leave&&!c.onWaitlist) return {error:`The student is not on the ${c.code} waitlist.`};
+    if(!leave&&c.onWaitlist) return {error:`Already on the ${c.code} waitlist at position ${c.waitlistPosition}.`};
+    return {awaitingConfirmation:true,action:'waitlist',courseCode:c.code,leave:!!leave,
+      summary:leave?`Leave the ${c.code} waitlist.`:`Join the ${c.code} ${c.title} waitlist (${c.waitlist} already waiting).`,
+      note:'A confirmation card is now shown to the student. Nothing changes until they confirm it themselves.'};},
+
+  get_degree_audit:async()=>{const au=A.degreeAudit(state.profile,state.registered); showView('audit'); flash($('auditBody').closest('.card')); log('agent','reviewed the degree audit.');
+    return {creditsEarned:au.creditsEarned,creditsInProgress:au.creditsInProgress,creditsRemaining:au.creditsRemaining,gpa:au.gpa,
+      dataSource:'Demo B.S. Computer Science requirement map for this prototype. For official 2026–27 requirements use get_phase1_recommendations.',
+      requirements:au.areas.map(a=>({area:a.area,items:a.items.map(i=>({name:i.name,status:i.status,stillNeed:i.stillNeed,completed:i.completed,inProgress:i.inProgress,offeredThisTerm:i.availableThisTerm}))}))};},
+
+  get_phase1_recommendations:async(args={})=>{
+    await loadPhase1();
+    if(args.interests){document.querySelectorAll('[data-phase-interest]').forEach(input=>{input.checked=args.interests.includes(input.dataset.phaseInterest);});}
+    if(typeof args.stat227Completed==='boolean') $('phase1StatDone').checked=args.stat227Completed;
+    const result=renderPhase1({interests:args.interests,stat227Completed:args.stat227Completed});
+    showView('recommendations'); flash($('phase1Recommendations').closest('.card'));
+    log('agent','ranked Spring 2026–27 courses from the official Bucknell snapshot.');
+    return {dataSource:SNAPSHOT_SOURCE,student:{name:state.profile.name,college:state.profile.college,major:state.profile.major},catalogYear:phase1.program.catalogYear,
+      collegeCoreCohort:phase1.core.cohort,term:'202705',sectionCount:phase1.offerings.length,
+      catalogApplicability:phase1.program.catalogApplicability,collegeCoreSourceNote:phase1.core.sourceNote,interests:result.interests,
+      sampleTranscript:result.transcript.map(r=>`${r.code} ${r.grade}`),
+      remainingRequirements:result.statuses.filter(r=>r.status!=='complete').map(r=>({id:r.id,label:r.label,status:r.status})),
+      collegeCore:result.coreStatuses.map(r=>({group:r.group,label:r.label,status:r.status,progress:r.progress,matchedCourses:r.matchedCourses})),
+      recommendations:result.recommendations.filter(r=>r.eligible).slice(0,10).map(r=>({code:r.code,title:r.title,score:r.score,
+        section:r.section.Section,credits:r.section.Credit,meeting:meetingLabel(r.section),usableSeats:window.Phase1Advisor.availableSeats(r.section),reasons:r.reasons,cautions:r.cautions}))};},
+
+  get_schedule:async()=>{log('agent','read the current schedule.'); flash($('planCard'));
+    return {totalCredits:regCredits(),maxCredits:state.profile.maxCredits,dataSource:DEMO_SOURCE,
+      courses:state.registered.map(c=>({code:c.code,title:c.title,instructor:c.instructor,credits:c.credits,schedule:A.describeSchedule(c),room:c.room})),
+      waitlists:A.CATALOG.filter(c=>c.onWaitlist).map(c=>({code:c.code,position:c.waitlistPosition})),draft:draftSummary()};},
+
+  update_preferences:async(args={})=>doUpdatePreferences(args,'agent'),
+};
 
 async function registerTools(){
   if(!document.modelContext){ $('mcpText').textContent='WebMCP is not available here. Open this page in the ChatGPT desktop app’s built-in browser, or Chrome with chrome://flags/#enable-webmcp-testing enabled.'; return; }
   const mc=document.modelContext;
   try{
-    await mc.registerTool({name:'get_student_profile',
-      description:'Return the signed-in Bucknell student’s academic profile: major, class year, GPA, credits earned, completed courses, interests, career goal, credit cap and scheduling preferences. Call this first to personalize any advice.',
-      inputSchema:{type:'object',properties:{}},
-      execute:async()=>{log('agent','read the student profile.'); flash($('stats'));
-        return text({...state.profile,registeredCourses:state.registered.map(c=>c.code)});}});
-
-    await mc.registerTool({name:'search_courses',
-      description:'Search the Fall 2026 Bucknell catalog. Every result carries an eligibility verdict (eligible, ineligible, full, conflict, taken) with plain-language reasons derived from the student’s prerequisites, GPA, seat availability and current schedule.',
-      inputSchema:{type:'object',properties:{
-        query:{type:'string',description:'Free-text match on course code, title or description.'},
-        tag:{type:'string',enum:Object.keys(A.TAG_LABEL),description:'Topic filter, e.g. ai, security, web, data, core.'},
-        department:{type:'string',description:'Department filter, e.g. "Computer Science".'},
-        onlyEligible:{type:'boolean',description:'Return only courses the student can register for right now.'}}},
-      execute:async(args={})=>{
-        const res=A.searchCourses(state.profile,state.registered,args);
-        $('q').value=args.query||''; state.activeDept=args.department||null; $('onlyEligible').checked=!!args.onlyEligible;
-        renderDepts(); renderCatalog(); flash($('catalog').closest('.card'));
-        log('agent',`searched the catalog — ${res.length} results.`);
-        return text(res.map(brief));}});
-
-    await mc.registerTool({name:'check_eligibility',
-      description:'Full eligibility report for one course: prerequisites, GPA minimum, open seats, waitlist size, and time conflicts against the student’s registered courses. Expands the course on screen.',
-      inputSchema:{type:'object',properties:{courseCode:{type:'string',description:'Course code such as CS360.'}},required:['courseCode']},
-      execute:async({courseCode})=>{
-        const c=A.findCourse(courseCode); if(!c) return text(`No course with code ${courseCode} in the Fall 2026 catalog.`);
-        const r=A.evaluate(c,state.profile,state.registered);
-        const el=$('why-'+c.code); if(el){el.classList.add('show'); $('course-'+c.code).scrollIntoView({block:'center',behavior:'smooth'}); flash($('course-'+c.code));}
-        log('agent',`checked eligibility for ${c.code}: ${r.status}.`);
-        return text(brief(r));}});
-
-    await mc.registerTool({name:'build_schedule',
-      description:'Propose an optimized semester schedule from the student’s constraints: credit cap, earliest start, latest end, priority topics, days to keep free. Only eligible, non-conflicting courses are selected. This produces a DRAFT shown on the page — no seats are held and nobody is enrolled. The result also reports the weekly workload in hours, project and team-work load, and which graduation requirement each course satisfies. Use suggest_alternatives or swap_draft_course to change one course without rebuilding, then register_course once the student agrees.',
-      inputSchema:{type:'object',properties:{
-        maxCredits:{type:'integer',minimum:1,maximum:21,description:'Credit cap for the semester.'},
-        earliestStart:{type:'string',description:'24h time such as "10:00" — no class may start earlier.'},
-        latestEnd:{type:'string',description:'24h time such as "17:00" — no class may end later.'},
-        priorities:{type:'array',items:{type:'string',enum:Object.keys(A.TAG_LABEL)},description:'Topic areas to prioritize, most important first.'},
-        avoidDays:{type:'array',items:{type:'string',enum:['Mon','Tue','Wed','Thu','Fri']},description:'Weekdays to keep free.'}}},
-      execute:async(args={})=>{
-        const r=doBuildSchedule(args,'agent');
-        const load=A.workloadSummary(r.plan);
-        return text({status:'draft — no seats held',totalCredits:r.totalCredits,
-          workload:{weeklyHours:load.hours,band:load.band,gradedProjects:load.projects,teamCourses:load.groupCourses,labCourses:load.labCourses,heaviest:load.heavyCourses},
-          courses:r.explanation.map(e=>{const c=A.findCourse(e.code),role=A.requirementRole(e.code,state.profile,state.registered),w=A.workloadOf(c);
-            return {code:e.code,title:e.title,credits:e.credits,instructor:c.instructor,schedule:A.describeSchedule(c),
-              requirement:role.label,requirementKind:role.kind,weeklyHours:w.hours,workloadBand:w.band,groupProject:w.groupWork,labHours:w.labHours,why:e.why};}),
-          skipped:r.skipped,note:'Draft only. Use suggest_alternatives to change one course, or register_course to enroll.'});}});
-
-    await mc.registerTool({name:'suggest_alternatives',
-      description:'For one course in the current DRAFT schedule, return 2-3 replacement options that fit around every other draft course unchanged. Each option states which graduation requirement it satisfies, its weekly workload in hours, whether it has a team project or lab, how well it matches the student’s interests, and the explicit trade-off against the course being replaced. Also returns what deferring the original course costs — whether it is required for the major and which later courses it unblocks. Use this when the student wants to change one course without rebuilding the whole schedule.',
-      inputSchema:{type:'object',properties:{courseCode:{type:'string',description:'The draft course to replace, e.g. CS320.'}},required:['courseCode']},
-      execute:async({courseCode})=>text(doOfferAlternatives(courseCode,'agent'))});
-
-    await mc.registerTool({name:'swap_draft_course',
-      description:'Swap one course out of the DRAFT schedule and optionally another in, leaving every other draft course exactly as it is. Omit replaceWith to simply remove the course and leave the slot open. This edits the draft only — no seats are held and nothing is registered.',
-      inputSchema:{type:'object',properties:{
-        remove:{type:'string',description:'Course code to take out of the draft.'},
-        replaceWith:{type:'string',description:'Course code to put in its place. Omit to leave the slot empty.'}},required:['remove']},
-      execute:async({remove,replaceWith})=>text(doSwap(remove,replaceWith||null,'agent'))});
-
-    await mc.registerTool({name:'explain_course_impact',
-      description:'Explain what one course means for the student’s path to graduation: which requirement it satisfies, whether it is required or elective, which later courses it unlocks as a prerequisite, its weekly workload and project/lab profile, and what deferring it to a later term would cost.',
-      inputSchema:{type:'object',properties:{courseCode:{type:'string'}},required:['courseCode']},
-      execute:async({courseCode})=>{
-        const c=A.findCourse(courseCode); if(!c) return text(`No course with code ${courseCode}.`);
-        const role=A.requirementRole(c.code,state.profile,state.registered), w=A.workloadOf(c), d=A.deferralImpact(c.code,state.profile,state.registered);
-        log('agent',`explained how ${c.code} affects graduation progress.`);
-        const el=$('course-'+c.code); if(el){el.scrollIntoView({block:'center',behavior:'smooth'}); flash(el);}
-        return text({code:c.code,title:c.title,requirement:role.label,requirementKind:role.kind,
-          weeklyHours:w.hours,workloadBand:w.band,projects:w.projects,groupProject:w.groupWork,labHours:w.labHours,workloadNote:w.note,
-          unlocks:d.blocks,deferringCosts:d.notes});}});
-
-    await mc.registerTool({name:'register_course',
-      description:'Register the student for one or more courses. SENSITIVE ACTION: the page opens a confirmation dialog and this call waits for the student to click Confirm. The result states whether they confirmed or declined — you cannot enroll them without that click.',
-      inputSchema:{type:'object',properties:{courseCodes:{type:'array',items:{type:'string'},description:'Course codes, e.g. ["CS360","CS380"].'}},required:['courseCodes']},
-      annotations:{destructiveHint:false,idempotentHint:false},
-      execute:async({courseCodes})=>text(await requestRegistration(courseCodes,'agent'))});
-
-    await mc.registerTool({name:'drop_course',
-      description:'Drop a registered course. SENSITIVE ACTION: requires the student to click Confirm on the page.',
-      inputSchema:{type:'object',properties:{courseCode:{type:'string'}},required:['courseCode']},
-      annotations:{destructiveHint:true},
-      execute:async({courseCode})=>text(await requestDrop(courseCode,'agent'))});
-
-    await mc.registerTool({name:'join_waitlist',
-      description:'Add the student to the waitlist for a course that has no open seats, and return their queue position. Use when a course the student wants is full.',
-      inputSchema:{type:'object',properties:{courseCode:{type:'string'},leave:{type:'boolean',description:'Set true to remove the student from that waitlist instead.'}},required:['courseCode']},
-      execute:async({courseCode,leave})=>text(doWaitlist(courseCode,'agent',!!leave))});
-
-    await mc.registerTool({name:'get_degree_audit',
-      description:'Return the student’s degree audit for the B.S. in Computer Science: credits earned, in progress and remaining, plus every requirement with its status (complete, in-progress, remaining), what still needs to be taken, and which qualifying courses are offered this term. Use this to recommend courses that actually move the student toward graduation. Opens the Degree Audit page.',
-      inputSchema:{type:'object',properties:{}},
-      execute:async()=>{const au=A.degreeAudit(state.profile,state.registered); showView('audit'); flash($('auditBody').closest('.card')); log('agent','reviewed the degree audit.');
-        return text({creditsEarned:au.creditsEarned,creditsInProgress:au.creditsInProgress,creditsRemaining:au.creditsRemaining,gpa:au.gpa,
-          requirements:au.areas.map(a=>({area:a.area,items:a.items.map(i=>({name:i.name,status:i.status,stillNeed:i.stillNeed,completed:i.completed,inProgress:i.inProgress,offeredThisTerm:i.availableThisTerm}))}))});}});
-
-    await mc.registerTool({name:'get_phase1_recommendations',
-      description:'Use official Bucknell sources to rank eligible courses: 2026–27 BSCS major requirements, Spring 2026–27 public sections/seats, and College of Arts & Sciences core requirements from the Class of 2024 page. Returns both major and college-core audit status, prerequisite-path value, interest matches, usable seats, reasons and cautions. Opens Smart Recommendations. Cohorts are labelled separately; production must select the student’s actual entry-year catalog.',
-      inputSchema:{type:'object',properties:{
-        interests:{type:'array',items:{type:'string',enum:['ai','security','data']},description:'Interest signals to include in ranking.'},
-        stat227Completed:{type:'boolean',description:'Test switch: mark STAT 227 complete to verify that it stops being recommended as a missing requirement.'}}},
-      execute:async(args={})=>{
-        await loadPhase1();
-        if(args.interests){document.querySelectorAll('[data-phase-interest]').forEach(input=>{input.checked=args.interests.includes(input.dataset.phaseInterest);});}
-        if(typeof args.stat227Completed==='boolean') $('phase1StatDone').checked=args.stat227Completed;
-        const result=renderPhase1({interests:args.interests,stat227Completed:args.stat227Completed});
-        showView('recommendations'); flash($('phase1Recommendations').closest('.card'));
-        log('agent','ranked Spring 2026–27 courses from the official Bucknell snapshot.');
-        return text({student:{name:state.profile.name,college:state.profile.college,major:state.profile.major},catalogYear:phase1.program.catalogYear,
-          collegeCoreCohort:phase1.core.cohort,term:'202705',sectionCount:phase1.offerings.length,
-          catalogApplicability:phase1.program.catalogApplicability,collegeCoreSourceNote:phase1.core.sourceNote,interests:result.interests,
-          remainingRequirements:result.statuses.filter(r=>r.status!=='complete').map(r=>({id:r.id,label:r.label,status:r.status})),
-          collegeCore:result.coreStatuses.map(r=>({group:r.group,label:r.label,status:r.status,progress:r.progress,matchedCourses:r.matchedCourses})),
-          recommendations:result.recommendations.filter(r=>r.eligible).slice(0,10).map(r=>({code:r.code,title:r.title,score:r.score,
-            section:r.section.Section,credits:r.section.Credit,meeting:meetingLabel(r.section),usableSeats:window.Phase1Advisor.availableSeats(r.section),reasons:r.reasons,cautions:r.cautions}))});}});
-
-    await mc.registerTool({name:'get_schedule',
-      description:'Return the student’s registered courses with instructors, meeting times, rooms, total credits, and any waitlists they are on.',
-      inputSchema:{type:'object',properties:{}},
-      execute:async()=>{log('agent','read the current schedule.'); flash($('planCard'));
-        return text({totalCredits:state.registered.reduce((s,c)=>s+c.credits,0),maxCredits:state.profile.maxCredits,
-          courses:state.registered.map(c=>({code:c.code,title:c.title,instructor:c.instructor,credits:c.credits,schedule:A.describeSchedule(c),room:c.room})),
-          waitlists:A.CATALOG.filter(c=>c.onWaitlist).map(c=>({code:c.code,position:c.waitlistPosition}))});}});
-
-    await mc.registerTool({name:'update_preferences',
-      description:'Persist the student’s advising preferences so later recommendations respect them: interests, credit cap, earliest start, latest end, days to keep free.',
-      inputSchema:{type:'object',properties:{
-        interests:{type:'array',items:{type:'string',enum:Object.keys(A.TAG_LABEL)}},
-        maxCredits:{type:'integer',minimum:1,maximum:21},
-        earliestStart:{type:'string',description:'24h time such as "10:00".'},
-        latestEnd:{type:'string',description:'24h time such as "18:00".'},
-        avoidDays:{type:'array',items:{type:'string',enum:['Mon','Tue','Wed','Thu','Fri']}}}},
-      execute:async(args={})=>text(doUpdatePreferences(args,'agent'))});
-
+    for(const tool of window.AdvisorTools.TOOLS){
+      await mc.registerTool({name:tool.name,description:tool.description,inputSchema:tool.inputSchema,
+        ...(tool.annotations?{annotations:tool.annotations}:{}),
+        execute:async(args={})=>text(await TOOL_HANDLERS[tool.name](args||{},{channel:'webmcp'}))});
+    }
     $('mcpDot').className='dot on';
-    $('mcpText').textContent='WebMCP connected — 14 site tools available. Your advisor can use official Spring 2026–27 recommendations, check degree progress, draft a schedule, swap a course, and request registration — you confirm every enrollment change.';
+    $('mcpText').textContent=`WebMCP connected — ${window.AdvisorTools.TOOLS.length} site tools available. Your advisor can use official Spring 2026–27 recommendations, check degree progress, draft a schedule, swap a course, and request registration — you confirm every enrollment change.`;
   }catch(err){ $('mcpText').textContent='Could not register WebMCP tools: '+err.message; console.error(err); }
 }
 registerTools();
+
+// ---------- In-portal AI advisor (Claude via /api/advisor) ----------
+createAdvisorChat({
+  handlers:TOOL_HANDLERS,
+  offlineReply:handleAdvisorPrompt,
+  getContext:()=>{
+    const reg=state.registered.map(c=>c.code), draft=state.proposal?.plan?.map(c=>c.code)||[];
+    return `Date ${new Date().toLocaleDateString('en-CA')}. Student: ${state.profile.name}, ${state.profile.year}, ${state.profile.major}, ${state.profile.college} (demo profile). `+
+      `Current page: ${VIEW_META[currentView]?.[1]||currentView}. Registered: ${reg.join(', ')||'none'} (${regCredits()} credits). Draft: ${draft.join(', ')||'none'}.`;
+  },
+  actions:{
+    showView,
+    getDraft:draftSummary,
+    swap:(out,inCode)=>doSwap(out,inCode,'human'),
+    async confirm(req){
+      const before=JSON.stringify([state.registered.map(c=>c.code),A.CATALOG.filter(c=>c.onWaitlist).map(c=>c.code)]);
+      let message;
+      if(req.action==='register') message=await requestRegistration(req.courseCodes,'agent');
+      else if(req.action==='drop') message=await requestDrop(req.courseCode,'agent');
+      else {
+        const c=A.findCourse(req.courseCode);
+        const ok=c&&await withTimeout(confirmDialog({title:req.leave?`Leave the ${c.code} waitlist?`:`Join the ${c.code} waitlist?`,
+          body:req.leave?'You will lose your place in the queue.':`You would be added behind ${c.waitlist} other students. No seat is held.`,
+          items:[`<b>${c.code}</b> ${esc(c.title)} — ${esc(c.instructor)}`],requestedBy:'agent'}),120000);
+        if(ok==='timeout') closeDialog(false);
+        message=ok===true?doWaitlist(req.courseCode,'human',req.leave):'The student declined. Nothing was changed.';
+      }
+      const after=JSON.stringify([state.registered.map(c=>c.code),A.CATALOG.filter(c=>c.onWaitlist).map(c=>c.code)]);
+      return {changed:before!==after,message};
+    },
+  },
+});
 </script>
 </body>
 </html>

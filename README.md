@@ -2,7 +2,7 @@
 
 A university course-registration portal where the AI in your browser acts as an **academic advisor that can actually do things**: read your profile, search the catalog, check prerequisites and seat availability, build a conflict-free schedule from a plain-language request, and register you — with every enrollment change gated behind a confirmation you click yourself.
 
-Students do not need ChatGPT to use the core experience. The portal includes an optional **Ask AI Advisor** panel that can review requirements, open official-data recommendations, build a draft and prepare registration from the same structured advising logic. WebMCP remains an additional client channel rather than the only interface.
+Students do not need ChatGPT to use the core experience. The portal includes an **Ask AI Advisor** panel powered by Claude: students ask in plain language, the advisor calls the same fourteen portal tools that WebMCP exposes, explains every recommendation (requirement, prerequisites, conflicts, credits, workload, seats, warnings) and builds a draft schedule. It never registers anyone — enrollment changes appear as a card the student must confirm. WebMCP remains an additional client channel rather than the only interface.
 
 Built for the **OpenAI WebMCP Challenge** (webmcp.devpost.com).
 
@@ -46,18 +46,56 @@ The agent calls `get_student_profile`, then `build_schedule` with those constrai
 | `join_waitlist` | Join or leave the waitlist for a full course, returns queue position | – |
 | `update_preferences` | Persist interests, credit limit, time window, days to avoid | – |
 
-Tools are registered with `document.modelContext.registerTool(...)` in `index.html`. All scheduling and eligibility logic lives in `engine.js` (pure JavaScript, no dependencies) so it can be unit-tested with Node.
+Tool names, descriptions and schemas live in `advisor-tools.js`, shared by the WebMCP registration, the in-portal advisor and the `/api/advisor` function. Handlers are in `index.html` (`TOOL_HANDLERS`). All scheduling and eligibility logic lives in `engine.js` (pure JavaScript, no dependencies) so it can be unit-tested with Node.
+
+## In-portal AI advisor (Claude)
+
+```
+browser: advisor-chat.js ──POST {messages}──▶ api/advisor.js ──▶ Claude Messages API
+   ▲ runs tool_use with the portal's handlers   (API key, system prompt, tool list stay server-side)
+   └ sends tool_result back, up to 6 rounds per question
+```
+
+- **Separation:** data and rules in `engine.js` / `phase1-recommender.js` / `data/`; tool contract in `advisor-tools.js`; handlers and UI in `index.html`; chat loop and cards in `advisor-chat.js`; LLM call in `api/advisor.js`.
+- **Guardrails:** the advisor only drafts. `register_course`, `drop_course` and `join_waitlist` render a confirmation card in the chat; the portal re-checks eligibility and opens the confirm dialog only when the student clicks it.
+- **Data honesty:** tool results carry a `dataSource` label (demo Fall 2026 catalog vs. official Spring 2026–27 snapshot, not live) and the system prompt forbids presenting either as real-time.
+- **Fallback:** if `/api/advisor` is unreachable or not configured, the panel says so and uses the basic offline (rule-based) assistant.
+
+### Configuration (Vercel environment variables)
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `ANTHROPIC_API_KEY` | yes | – | Claude API key. Never commit it; set it in Vercel or `.env.local`. |
+| `ADVISOR_MODEL` | no | `claude-sonnet-5-5` | Model id. |
+| `ADVISOR_EFFORT` | no | `medium` | `low` is faster and cheaper; `medium` handles multi-step planning better. |
+| `ADVISOR_ALLOWED_ORIGINS` | no | – | Extra comma-separated origins allowed to call the API (same host and localhost are always allowed). |
+| `ADVISOR_DISABLED` | no | – | `1` pauses the advisor without calling the API (the panel shows "demo limit reached"). |
+
+```bash
+vercel env add ANTHROPIC_API_KEY      # paste the key at the prompt, for Production/Preview/Development
+vercel env pull .env.local            # local development (.env.* is git-ignored)
+```
+
+### Usage limits
+
+- **Hard cap:** set a spend limit on the Anthropic Console workspace that owns the key. When it is reached the API answers `402 billing_error`; the function returns `limit_reached` and the panel pauses itself — no retries, no fallback model, no further spend.
+- **Soft caps in the function:** origin check, 60 requests per IP per 10 minutes (per instance, best-effort), 2,000 characters per message, 80 messages per conversation, `max_tokens` 16,000, at most 6 tool rounds per question.
 
 ## Run locally
 
-Static site, no build step.
-
 ```bash
-python3 -m http.server 8080
-# open http://localhost:8080
+npm install
+vercel dev            # static site + /api/advisor, reads .env.local
+# open http://localhost:3000
 ```
 
-Serve over HTTP rather than opening the file directly; some browser APIs are restricted on `file://`.
+`python3 -m http.server 8080` still serves the static portal; the advisor then falls back to the offline assistant. Serve over HTTP rather than opening the file directly; some browser APIs are restricted on `file://`.
+
+Tests (no API key needed):
+
+```bash
+npm test              # Phase 1 data checks + /api/advisor handler checks
+```
 
 ## Test with a real agent
 
@@ -68,7 +106,7 @@ The status line at the bottom of the page reports whether WebMCP is available. I
 
 ## Deploy
 
-Drag the folder onto Netlify Drop, run `vercel --prod`, or connect the repo to Render / Cloudflare Pages with no build command. Keep `phase1-recommender.js` and `data/` beside `index.html`.
+Deploy to Vercel (`vercel` for a preview, `vercel --prod` for production) after setting `ANTHROPIC_API_KEY`. The static portal alone still works on any static host (Netlify Drop, Cloudflare Pages) — the advisor then runs in offline mode. Keep `engine.js`, `phase1-recommender.js`, `advisor-tools.js`, `advisor-chat.js` and `data/` beside `index.html`.
 
 ## Pages
 
