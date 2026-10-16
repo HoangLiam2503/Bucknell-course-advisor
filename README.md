@@ -66,8 +66,8 @@ browser: advisor-chat.js ──POST {messages}──▶ api/advisor.js ──▶
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
 | `GEMINI_API_KEY` | yes | – | Gemini API key from Google AI Studio. Never commit it; set it in Vercel or `.env.local`. |
-| `ADVISOR_MODEL` | no | `gemini-3.8-flash` | Model id. `gemini-3.5-flash-lite` is faster with a larger free quota. |
-| `GEMINI_THINKING_LEVEL` | no | `low` | `minimal` (Flash-Lite only), `low`, `medium` or `high`. Higher is slower and uses more of the quota. |
+| `ADVISOR_MODEL` | no | `gemini-3.5-flash-lite` | Model id. Flash-Lite answered each step in about 1 s in testing; `gemini-3.8-flash` was often overloaded (503/504) on the free tier. |
+| `GEMINI_THINKING_LEVEL` | no | `low` | `minimal`, `low`, `medium` or `high` (`gemini-3.8-flash` has no `minimal`). Higher is slower and uses more of the quota. |
 | `ADVISOR_ALLOWED_ORIGINS` | no | – | Extra comma-separated origins allowed to call the API (same host and localhost are always allowed). |
 | `ADVISOR_DISABLED` | no | – | `1` pauses the advisor without calling the API (the panel shows "demo limit reached"). |
 
@@ -79,8 +79,8 @@ vercel env pull .env.local            # local development (.env.* is git-ignored
 ### Usage limits and cost
 
 - **Free by construction:** create the key in Google AI Studio for a Google Cloud project **without billing enabled**. Such a project can only use the free tier, so it cannot be charged. When the free quota is used up the API answers `429 RESOURCE_EXHAUSTED`.
-- **Paused, not retried:** a spent daily quota (or a billing spend cap) is returned to the browser as `limit_reached`, and the panel pauses itself for the session — no retries, no other model. A per-minute limit shows "try again shortly". `ADVISOR_DISABLED=1` pauses the advisor without calling the API.
-- **Soft caps in the function:** origin check, 60 requests per IP per 10 minutes (per instance, best-effort), 2,000 characters per message, 80 messages per conversation, 8,192 output tokens per turn, at most 6 tool rounds per question.
+- **Paused, not retried:** a spent *daily* quota (identified from the `quotaId` in Google's error details) is returned to the browser as `limit_reached`, and the panel pauses itself for the session — no retries, no other model. A per-minute limit is temporary: the panel waits for Google's `retryDelay` (up to 60 s) and continues the same answer. `ADVISOR_DISABLED=1` pauses the advisor without calling the API.
+- **Soft caps in the function:** origin check, 60 requests per IP per 10 minutes (per instance, best-effort), 2,000 characters per message, 80 messages per conversation, 8,192 output tokens per turn, 30 s upstream timeout, at most 6 tool rounds per question.
 - **Privacy:** Google may use free-tier prompts and responses to improve its products. This prototype only sends the demo profile and demo/snapshot course data; a production deployment with real student records needs the paid tier and a data-processing agreement.
 
 ## Run locally

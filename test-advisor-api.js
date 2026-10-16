@@ -99,7 +99,7 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
   assert.deepEqual(ok.json().content, [{ type: 'text', text: 'Hi Liam.' }]);
   assert.equal(ok.json().stop_reason, 'end_turn');
   const sent = client.calls[0];
-  assert.equal(sent.model, 'gemini-3.8-flash');
+  assert.equal(sent.model, 'gemini-3.5-flash-lite');
   assert.deepEqual(sent.contents, contents);
   assert.equal(sent.config.systemInstruction, SYSTEM_PROMPT);
   assert.deepEqual(sent.config.tools, [{ functionDeclarations: AdvisorTools.forGemini() }]);
@@ -109,8 +109,8 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
   assert.doesNotMatch(SYSTEM_PROMPT, /\d{4}-\d{2}-\d{2}/, 'system prompt carries no date, so the prefix stays stable');
 
   const custom = fakeClient(okResponse);
-  await call(createHandler({ client: custom, env: { ...ENV, ADVISOR_MODEL: 'gemini-3.5-flash-lite', GEMINI_THINKING_LEVEL: 'minimal' } }), request({ body: { messages: convo } }));
-  assert.equal(custom.calls[0].model, 'gemini-3.5-flash-lite');
+  await call(createHandler({ client: custom, env: { ...ENV, ADVISOR_MODEL: 'gemini-3.6-flash', GEMINI_THINKING_LEVEL: 'minimal' } }), request({ body: { messages: convo } }));
+  assert.equal(custom.calls[0].model, 'gemini-3.6-flash');
   assert.equal(custom.calls[0].config.thinkingConfig.thinkingLevel, 'MINIMAL');
 
   // Usage limit: kill switch never reaches the API
@@ -127,9 +127,15 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
 
   // Upstream errors map to stable codes and never echo upstream text
   const apiErr = (status, message) => new ApiError({ status, message });
+  // Shape of a Gemini quota error: JSON body with google.rpc QuotaFailure + RetryInfo details.
+  const quota = (quotaId, retryDelay) => apiErr(429, 'got status: 429 Too Many Requests. ' + JSON.stringify({ error: { code: 429,
+    message: `Quota exceeded for metric: generate_content_free_tier_requests. To increase limits, set up billing. key=${KEY}`, status: 'RESOURCE_EXHAUSTED',
+    details: [{ '@type': 'type.googleapis.com/google.rpc.QuotaFailure', violations: [{ quotaMetric: 'generativelanguage.googleapis.com/generate_content_free_tier_requests', quotaId }] },
+      { '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay }] } }));
   const cases = [
-    [apiErr(429, `RESOURCE_EXHAUSTED: Quota exceeded for metric generate_content_free_tier_requests, limit: GenerateRequestsPerDayPerProjectPerModel-FreeTier key=${KEY}`), 402, 'limit_reached'],
-    [apiErr(429, 'RESOURCE_EXHAUSTED: Quota exceeded for metric generate_content_free_tier_requests, limit: GenerateRequestsPerMinutePerProjectPerModel-FreeTier'), 429, 'rate_limited'],
+    [quota('GenerateRequestsPerDayPerProjectPerModel-FreeTier', '3600s'), 402, 'limit_reached'],
+    [quota('GenerateRequestsPerMinutePerProjectPerModel-FreeTier', '23.5s'), 429, 'rate_limited'],
+    [apiErr(429, 'got status: 429. plain text, set up billing to increase limits'), 429, 'rate_limited'],
     [apiErr(400, `API key not valid. Please pass a valid API key. ${KEY}`), 503, 'not_configured'],
     [apiErr(403, 'PERMISSION_DENIED'), 503, 'not_configured'],
     [apiErr(400, 'INVALID_ARGUMENT: Function call is missing a thought_signature'), 400, 'bad_request'],
@@ -145,6 +151,9 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
     assert.equal(res.json().code, code);
     assert.doesNotMatch(res.body, /AIza|Quota exceeded|API key not valid/, 'no upstream details leak');
   }
+  const perMinute = await call(createHandler({ client: fakeClient(() => { throw cases[1][0]; }), env: ENV }), request({ body: { messages: convo } }));
+  assert.equal(perMinute.json().retryAfter, 24, 'retry delay comes from RetryInfo');
+  assert.equal(perMinute.headers['retry-after'], '24');
 
   // Rate limit per IP
   const rl = createHandler({ client: fakeClient(okResponse), env: ENV });

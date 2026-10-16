@@ -11,7 +11,7 @@
 const { GoogleGenAI, ApiError, FunctionCallingConfigMode, ThinkingLevel } = require('@google/genai');
 const AdvisorTools = require('../advisor-tools.js');
 
-const MODEL = 'gemini-3.8-flash';
+const MODEL = 'gemini-3.5-flash-lite';
 const THINKING_LEVEL = 'low';
 const MAX_OUTPUT_TOKENS = 8192;
 const MAX_BODY_BYTES = 1024 * 1024;
@@ -174,17 +174,32 @@ function fromGeminiResponse(response) {
   return { content, stop_reason, finish_reason: reason || null };
 }
 
+/** Pulls the structured google.rpc details (quota ids, retry delay) out of an SDK error message. */
+function googleErrorInfo(err) {
+  const message = String(err?.message || '');
+  let body = null;
+  const start = message.indexOf('{');
+  if (start >= 0) { try { body = JSON.parse(message.slice(start)); } catch { /* not JSON */ } }
+  const error = body?.error || {};
+  const details = Array.isArray(error.details) ? error.details : [];
+  const quotaIds = details.flatMap(d => (d.violations || []).map(v => v.quotaId || v.quotaMetric).filter(Boolean));
+  const delay = details.find(d => String(d['@type'] || '').endsWith('RetryInfo'))?.retryDelay;
+  const retryAfter = delay ? Math.ceil(parseFloat(delay)) : null;
+  return { reason: error.status || null, quotaIds, retryAfter: Number.isFinite(retryAfter) ? retryAfter : null };
+}
+
 /** Maps SDK errors to responses that never echo upstream messages (which could carry request details). */
 function mapError(err) {
   const status = err instanceof ApiError ? err.status : null;
   const message = String(err?.message || '');
   if (status === 429) {
-    // A spent daily free-tier quota (or a billing spend cap) means the advisor is done for now;
-    // a per-minute limit is temporary.
-    if (/per.?day|daily|spend|billing|prepayment|credits/i.test(message)) {
+    // Only a spent *daily* quota pauses the advisor; per-minute limits are temporary.
+    const info = googleErrorInfo(err);
+    if (info.quotaIds.some(id => /PerDay/i.test(id))) {
       return [402, { code: 'limit_reached', error: 'The AI advisor has reached its demo usage limit.' }];
     }
-    return [429, { code: 'rate_limited', error: 'The AI advisor is busy. Try again shortly.', retryAfter: 30 }, { 'Retry-After': '30' }];
+    const retryAfter = Math.min(Math.max(info.retryAfter || 30, 1), 120);
+    return [429, { code: 'rate_limited', error: 'The AI advisor is busy. Try again shortly.', retryAfter }, { 'Retry-After': String(retryAfter) }];
   }
   if (status === 401 || status === 403 || (status === 400 && /api key/i.test(message))) {
     return [503, { code: 'not_configured', error: 'The AI advisor is not configured correctly.' }];
@@ -223,7 +238,7 @@ function createHandler({ client, env = process.env, rateLimiter = createRateLimi
     const invalid = validateMessages(body.messages);
     if (invalid) return send(res, 400, { code: 'bad_request', error: invalid });
 
-    lazyClient ||= new GoogleGenAI({ apiKey: env.GEMINI_API_KEY, httpOptions: { timeout: 55_000 } });
+    lazyClient ||= new GoogleGenAI({ apiKey: env.GEMINI_API_KEY, httpOptions: { timeout: 30_000 } });
     try {
       const response = await lazyClient.models.generateContent({
         model: env.ADVISOR_MODEL || MODEL,
@@ -240,7 +255,8 @@ function createHandler({ client, env = process.env, rateLimiter = createRateLimi
       return send(res, 200, { ...out, usage: response.usageMetadata || null });
     } catch (err) {
       const [status, payload, headers] = mapError(err);
-      console.error('[advisor] upstream error', err?.status || err?.name);
+      const info = googleErrorInfo(err);
+      console.error('[advisor] upstream error', err?.status || err?.name, info.reason || '', info.quotaIds.join(',') || '', info.retryAfter ?? '');
       return send(res, status, payload, headers);
     }
   };

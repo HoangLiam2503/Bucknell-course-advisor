@@ -5,7 +5,7 @@
 
 const MAX_ROUNDS = 6;
 const MAX_HISTORY = 70;
-const REQUEST_TIMEOUT_MS = 60_000;
+const REQUEST_TIMEOUT_MS = 45_000;
 const LIMIT_KEY = 'advisorLimitReached';
 
 const TOOL_LABELS = {
@@ -179,6 +179,23 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
   }
 
   // ---------- Network ----------
+  /** POST with automatic waits for temporary limits, so a multi-step answer is not lost halfway. */
+  async function postWithRetry(body, gen) {
+    for (let attempt = 0; ; attempt++) {
+      try { return await post(body); }
+      catch (err) {
+        const code = err instanceof AdvisorHttpError ? err.payload.code : null;
+        const wait = code === 'rate_limited' ? Number(err.payload.retryAfter) || 30 : code === 'upstream_busy' ? 3 : 0;
+        if (!wait || attempt >= 2 || wait > 60 || gen !== generation) throw err;
+        for (let s = wait; s > 0; s--) {
+          if (gen !== generation || controller?.signal.aborted) throw err;
+          typing(code === 'rate_limited' ? `Free-tier rate limit — continuing in ${s}s…` : 'The AI service is busy — retrying…');
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      }
+    }
+  }
+
   async function post(body) {
     controller = new AbortController();
     const timer = setTimeout(() => controller.abort('timeout'), REQUEST_TIMEOUT_MS);
@@ -240,7 +257,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     const rollback = () => { messages = messages.slice(0, checkpoint); pendingEvents = [...eventsBefore, ...pendingEvents]; rolledBack = true; };
     try {
       for (let round = 0; ; round++) {
-        const data = await post({ messages });
+        const data = await postWithRetry({ messages }, gen);
         if (gen !== generation) return; // conversation was reset while waiting
         const textOut = data.content.filter(b => b.type === 'text' && b.text.trim()).map(b => b.text).join('\n\n');
         if (data.stop_reason === 'refusal') { rollback(); stopTyping(); bubble('ai', 'I can’t help with that here. I can help with courses, requirements and your schedule.'); break; }
