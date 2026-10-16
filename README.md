@@ -108,11 +108,22 @@ The status line at the bottom of the page reports whether WebMCP is available. I
 
 ## Deploy
 
-Deploy to Vercel (`vercel` for a preview, `vercel --prod` for production) after setting `ANTHROPIC_API_KEY`. The static portal alone still works on any static host (Netlify Drop, Cloudflare Pages) — the advisor then runs in offline mode. Keep `engine.js`, `phase1-recommender.js`, `advisor-tools.js`, `advisor-chat.js` and `data/` beside `index.html`.
+Deploy to Vercel (`vercel` for a preview, `vercel --prod` for production) after setting `GEMINI_API_KEY`. The static portal alone still works on any static host (Netlify Drop, Cloudflare Pages) — the advisor then runs in offline mode. Keep `styles.css`, `engine.js`, `phase1-recommender.js`, `spring-planner.js`, `advisor-tools.js`, `advisor-chat.js` and `data/` beside `index.html`.
 
 ## Pages
 
 Registration (catalog + plan side by side), Course Catalog (full width), My Schedule (week grid + day list), Degree Audit, Transcript, and Smart Recommendations (the official-data Phase 1 sandbox). Navigation is hash-based (`#audit`, `#recommendations`, …) so the agent can send the student to a page by calling the matching tool.
+
+## Design system
+
+All styling lives in `styles.css` (no build step): tokens → base → shell → components → views → planner → advisor → modal → motion → print.
+
+- **Type:** Geist for UI, Geist Mono for course codes and CRNs, Source Serif 4 for page titles.
+- **Color:** neutral surfaces with Bucknell orange for primary actions and active states and deep blue for the brand mark and drafts. Text colors meet WCAG AA (4.5:1) in both themes; `--orange` is for fills, `--orange-ink` for orange text.
+- **Token names** (`--bg`, `--panel`, `--text-3`, `--orange`, `--blue`, …) are also used by inline styles that `index.html` generates — change values, not names.
+- **Themes:** light by default, dark via `prefers-color-scheme`, and a toggle in the header that remembers the choice in `localStorage` (`bca-theme`).
+- **Responsive:** below 900px the sidebar becomes a drawer opened from the top bar; wide tables scroll horizontally inside their card. Motion is limited to a short entrance per page, hover/press feedback and modal transitions, and is disabled under `prefers-reduced-motion`.
+- The Registration page is labeled as a practice sandbox: the Fall catalog is sample data and real Spring registration happens in Banner with the CRNs from the planner.
 
 ## Data
 
