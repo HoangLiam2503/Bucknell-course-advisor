@@ -23,6 +23,9 @@ const TOOL_LABELS = {
   get_phase1_recommendations: 'Ranking Spring 2026–27 courses…',
   get_schedule: 'Reading your schedule…',
   update_preferences: 'Saving your preferences…',
+  plan_spring_schedule: 'Building Spring plans from real sections…',
+  explain_section: 'Reading the section details…',
+  prepare_advisor_summary: 'Preparing your advisor summary…',
 };
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
@@ -170,12 +173,39 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     if (!outcome.changed) button.disabled = false;
   }
 
+  function springPlanCard(result) {
+    const plan = result.plans?.[0];
+    if (!plan) { notice((result.notes || []).join(' ') || 'No Spring plan fits those limits.', 'warn'); return; }
+    const rows = plan.courses.map(c => `
+      <li><div class="row"><code>${esc(c.code)}</code><b>${esc(c.title)}</b><span class="cr">${c.credits} cr</span></div>
+        ${c.sections.map(x => `<div class="meta">${esc(x.part)} ${esc(x.section.split(' ').pop())} · CRN ${esc(x.crn)} · ${esc(x.meets.join('; ') || 'TBA')}</div>`).join('')}
+        ${c.countsToward.length ? `<div class="tag required">${esc(c.countsToward.join(' · '))}</div>` : ''}</li>`).join('');
+    const warn = plan.warnings.length ? `<div class="warn">${plan.warnings.length} thing${plan.warnings.length === 1 ? '' : 's'} to check, e.g. ${esc(plan.warnings[0])}</div>` : '';
+    const notes = (result.notes || []).map(n => `<div class="warn">${esc(n)}</div>`).join('');
+    const el = card(`<div class="hd"><span class="kind draft">Spring 2026–27 · plan 1 of ${result.plans.length}</span><span>${plan.totalCredits} credits · ${plan.coveredItems.length} audit items</span></div>
+      ${notes}<ul>${rows}</ul>${warn}<p class="src">Real sections from the Spring snapshot. No seats held — register in Banner with the CRNs.</p>
+      <div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-act="plans">See all plans</button>
+        <button type="button" class="btn btn-primary btn-sm" data-act="summary">Advisor summary</button></div>`);
+    el.querySelector('[data-act="plans"]').onclick = () => actions.showPlanner();
+    el.querySelector('[data-act="summary"]').onclick = () => actions.openSummary(0);
+  }
+
+  function summaryCard(result) {
+    const el = card(`<div class="hd"><span class="kind rec">Advisor meeting summary</span><span>${esc(result.includesPlan || '')}</span></div>
+      <p class="body">${(result.questions || []).length} question${(result.questions || []).length === 1 ? '' : 's'} to ask, plus your audit progress${/Plan/.test(result.includesPlan || '') ? ' and Spring plan' : ''}. Print it or copy it as text.</p>
+      <div class="acts"><button type="button" class="btn btn-primary btn-sm" data-act="open">Open summary</button></div>`);
+    const planNo = Number((result.includesPlan || '').match(/Plan (\d)/)?.[1] || 1) - 1;
+    el.querySelector('[data-act="open"]').onclick = () => actions.openSummary(planNo);
+  }
+
   function renderToolCard(name, result) {
     if (!result || typeof result !== 'object') return;
     if (result.awaitingConfirmation) return confirmationCard(result);
     if ((name === 'build_schedule' || name === 'swap_draft_course') && !result.error) return draftCard();
     if (name === 'get_phase1_recommendations') return recommendationCard(result);
     if (name === 'suggest_alternatives') return alternativesCard(result);
+    if (name === 'plan_spring_schedule') return springPlanCard(result);
+    if (name === 'prepare_advisor_summary' && !result.error) return summaryCard(result);
   }
 
   // ---------- Network ----------

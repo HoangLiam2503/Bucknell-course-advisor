@@ -32,7 +32,7 @@ const convo = [{ role: 'user', content: [{ type: 'text', text: 'Plan my next sem
   // Tool contract
   const names = AdvisorTools.TOOLS.map(t => t.name);
   assert.equal(new Set(names).size, names.length, 'tool names are unique');
-  assert.equal(names.length, 14, 'all fourteen portal tools are declared');
+  assert.equal(names.length, 17, 'all seventeen portal tools are declared');
   for (const t of AdvisorTools.TOOLS) {
     assert.ok(['read', 'draft', 'gated'].includes(t.kind), `${t.name} has a kind`);
     assert.equal(t.inputSchema.type, 'object');

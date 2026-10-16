@@ -215,8 +215,6 @@
     return hits;
   }
 
-  const KNOWN_PREREQ_SUBJECTS = ['CSCI', 'MATH', 'STAT'];
-
   function recommendForAudit({ audit, offerings, completed = [], interests = [], extraCompleted = [] }) {
     const done = new Set([...completed, ...extraCompleted].map(c => String(c).replace(/\s/g, '').toUpperCase()));
     const areas = auditStatus(audit, extraCompleted);
@@ -246,7 +244,7 @@
       if (openSeats > 0) { score += Math.min(5, Math.ceil(openSeats / 5)); reasons.push(`${openSeats} unreserved seat${openSeats === 1 ? '' : 's'} in the snapshot.`); }
       else cautions.push('No unreserved seats in the snapshot.');
       if (!prereq.met) cautions.push(`Missing prerequisite: ${prereq.missing.map(x => x.join(' or ')).join('; ')}.`);
-      else if (!PREREQUISITES[code] && KNOWN_PREREQ_SUBJECTS.includes(section.Subj) && Number(section.Number) >= 200) cautions.push('Prerequisites are not in the demo data — check the Course Guide.');
+      else if (!PREREQUISITES[code] && Number(section.Number) >= 200) cautions.push('Prerequisites are not in the demo data — check the Course Guide.');
       const designationHits = hits.filter(h => h.kind === 'designation');
       if (designationHits.length > 1 || (designationHits.length && hits.some(h => h.kind === 'course'))) cautions.push('Confirm with your advisor that one course may count toward each of these.');
       if (hits.some(h => h.item.designation === 'W2')) cautions.push('One of the two W2 courses must be taken after the first year.');

@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vercel dev",
-    "test": "node test-phase1.js && node test-advisor-api.js"
+    "test": "node test-phase1.js && node test-planner.js && node test-advisor-api.js"
   },
   "engines": {
     "node": ">=20"

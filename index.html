@@ -296,6 +296,50 @@
   .rec-course .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .rec-course h3{font-size:14.5px;margin:0;font-weight:600;}
   .rec-course h3 code{font-family:'Roboto Mono',monospace;font-size:11.5px;color:var(--orange);margin-right:7px;}
+  .planner-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+  .planner-controls label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--text-3);}
+  .planner-controls input,.planner-controls select{background:var(--panel-2);border:1px solid var(--line);border-radius:7px;color:var(--text);font:inherit;font-size:12.5px;padding:7px 9px;}
+  .planner-controls input{width:190px;}
+  .pl-days{border:0;padding:0;margin:0;display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+  .pl-days legend{font-size:11.5px;color:var(--text-3);padding:0;margin-bottom:5px;}
+  .planner-controls .pl-days label.choice{display:inline-flex;flex-direction:row;align-items:center;gap:6px;width:auto;color:var(--text-2);font-size:12px;padding:6px 9px;}
+  .pl-tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap;}
+  .pl-tab{background:var(--panel-2);border:1px solid var(--line);color:var(--text-2);border-radius:7px;padding:7px 12px;font-size:12.5px;cursor:pointer;}
+  .pl-tab[aria-selected="true"]{border-color:var(--orange);color:var(--orange);background:var(--orange-bg);}
+  .pl-notes{margin:10px 0 0;padding-left:18px;color:var(--amber);font-size:12px;line-height:1.6;}
+  .pl-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start;}
+  @media(max-width:1050px){.pl-grid{grid-template-columns:1fr;}}
+  .wk{display:grid;grid-template-columns:38px repeat(5,minmax(0,1fr));border:1px solid var(--line-soft);border-radius:8px;overflow:hidden;background:var(--bg);}
+  .wk-head{font-size:11px;color:var(--text-3);text-align:center;padding:6px 0;border-bottom:1px solid var(--line-soft);}
+  .wk-col{position:relative;border-left:1px solid var(--line-soft);background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--line-soft) 29px,var(--line-soft) 30px);}
+  .wk-hours{position:relative;}
+  .wk-hours span{position:absolute;right:5px;font-size:9.5px;color:var(--text-3);transform:translateY(-50%);}
+  .wk-blk{position:absolute;left:3px;right:3px;border-radius:5px;padding:3px 5px;font-size:10px;line-height:1.25;overflow:hidden;border:1px solid;}
+  .wk-blk b{display:block;font-family:'Roboto Mono',monospace;font-size:9.5px;font-weight:500;}
+  .wk-blk.occasional{border-style:dashed;background:transparent!important;opacity:.8;}
+  .pl-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .pl-table th{text-align:left;font-size:10.5px;color:var(--text-3);font-weight:500;padding:6px 6px;border-bottom:1px solid var(--line);}
+  .pl-table td{padding:7px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--text-2);}
+  .pl-table td code{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--orange);}
+  .pl-table .crn{font-family:'Roboto Mono',monospace;color:var(--text);}
+  .pl-sub{font-size:12.5px;font-weight:600;margin:16px 0 6px;}
+  .pl-list{margin:0;padding-left:18px;font-size:12px;line-height:1.6;color:var(--text-2);}
+  .pl-list li.warn{color:var(--amber);}
+  .pl-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .modal.summary{max-width:780px;max-height:88vh;overflow:auto;}
+  #summarySheet h2{font-size:18px;margin:0 0 4px;}
+  #summarySheet h3{font-size:13.5px;margin:18px 0 6px;}
+  #summarySheet p,#summarySheet li,#summarySheet td{font-size:12.5px;line-height:1.55;color:var(--text-2);}
+  #summarySheet table{width:100%;border-collapse:collapse;}
+  #summarySheet td,#summarySheet th{border-bottom:1px solid var(--line-soft);padding:5px 6px;text-align:left;vertical-align:top;}
+  #summarySheet th{font-size:11px;color:var(--text-3);font-weight:500;}
+  #summarySheet .meta{font-size:11.5px;color:var(--text-3);}
+  @media print{
+    body *{visibility:hidden!important;}
+    #summarySheet,#summarySheet *{visibility:visible!important;color:#000!important;}
+    #summarySheet{position:absolute;inset:0 auto auto 0;width:100%;padding:24px;background:#fff;}
+    .ov{background:none!important;backdrop-filter:none!important;}
+  }
   .closes-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
   .closes{font-size:10.5px;padding:3px 7px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(62,175,124,.3);}
   .rec-course .meta{font-size:11.5px;color:var(--text-3);margin-top:5px;line-height:1.5;}
@@ -540,6 +584,22 @@
           <div class="load-note">Try the STAT 227 toggle: it ranks highly while the audit says Not Met, then drops out once it is marked complete.</div>
         </div>
       </div>
+      <div class="card" id="plannerCard" style="margin-bottom:18px">
+        <div class="card-head"><h2>Plan Spring 2026–27</h2><span class="eyebrow">Real sections · labs included · no seats held</span></div>
+        <div class="card-body">
+          <form class="planner-controls" id="plannerForm">
+            <label>Must include<input id="plMust" placeholder="e.g. CSCI 204, STAT 227" autocomplete="off"></label>
+            <label>Courses<select id="plMax"><option>3</option><option selected>4</option><option>5</option></select></label>
+            <label>No class before<select id="plStart"><option value="">Any time</option><option value="09:00">9 am</option><option value="10:00">10 am</option><option value="11:00">11 am</option></select></label>
+            <label>Done by<select id="plEnd"><option value="">Any time</option><option value="15:00">3 pm</option><option value="16:00">4 pm</option><option value="17:00">5 pm</option><option value="18:00">6 pm</option></select></label>
+            <fieldset class="pl-days"><legend>Keep free</legend>
+              <label class="choice"><input type="checkbox" data-free-day="Mon"> Mon</label><label class="choice"><input type="checkbox" data-free-day="Tue"> Tue</label><label class="choice"><input type="checkbox" data-free-day="Wed"> Wed</label><label class="choice"><input type="checkbox" data-free-day="Thu"> Thu</label><label class="choice"><input type="checkbox" data-free-day="Fri"> Fri</label>
+            </fieldset>
+            <button class="btn btn-primary btn-sm" type="submit">Build plans</button>
+          </form>
+          <div id="plannerOut" aria-live="polite"><p class="empty">Plans are built from the Spring 2026–27 snapshot and your open audit items. Weekly class times never overlap; evening exam slots are flagged instead.</p></div>
+        </div>
+      </div>
       <div class="rec-layout">
         <div class="card">
           <div class="card-head"><h2>Recommended Spring courses</h2><span class="eyebrow" id="phase1Count">—</span></div>
@@ -572,7 +632,8 @@
   <div class="advisor-thread" id="advisorThread" aria-live="polite">
     <div class="advisor-msg ai">Hi Liam — tell me what you want from next semester in your own words. I’ll check your requirements, prerequisites, conflicts, workload and seats, then build a draft for you to review. I never register you — you confirm every change.</div>
     <div class="advisor-chips">
-      <button type="button" class="advisor-chip" data-advisor-prompt="Plan my next semester, max 15 credits, nothing before 10am, prioritize AI and cybersecurity.">Plan my semester</button>
+      <button type="button" class="advisor-chip" data-advisor-prompt="Plan my Spring 2026–27 semester: 4 courses including CSCI 204, nothing before 10am.">Plan my Spring</button>
+      <button type="button" class="advisor-chip" data-advisor-prompt="I'm meeting my advisor this week. Prepare a summary with questions to ask.">Advisor meeting prep</button>
       <button type="button" class="advisor-chip" data-advisor-prompt="What degree requirements do I still have left?">Remaining requirements</button>
       <button type="button" class="advisor-chip" data-advisor-prompt="Which official Spring 2026–27 courses should I consider, and why?">Spring recommendations</button>
     </div>
@@ -582,6 +643,13 @@
     <div class="advisor-disclaimer">AI-generated advice using a demo profile, demo Fall catalog and a saved Spring 2026–27 snapshot — not live data. Messages are processed by Google Gemini (free tier) — don’t share personal information. Verify with your academic advisor. Nothing is registered without your confirmation.</div>
   </form>
 </aside>
+
+<div class="ov" id="sumOv">
+  <div class="modal summary" role="dialog" aria-modal="true" aria-labelledby="sumTitle">
+    <div id="summarySheet"></div>
+    <div class="m-act"><button class="btn btn-ghost" id="sumCopy">Copy as text</button><button class="btn btn-ghost" id="sumPrint">Print / Save PDF</button><button class="btn btn-primary" id="sumClose">Close</button></div>
+  </div>
+</div>
 
 <div class="ov" id="ov">
   <div class="modal" role="dialog" aria-modal="true">
@@ -601,6 +669,7 @@
 
 <script src="engine.js"></script>
 <script src="phase1-recommender.js"></script>
+<script src="spring-planner.js"></script>
 <script src="advisor-tools.js"></script>
 <script type="module">
 import { createAdvisorChat } from './advisor-chat.js';
@@ -691,6 +760,114 @@ async function loadPhase1(){
   ]).then(([audit,offerings])=>{phase1.audit=audit;phase1.offerings=offerings;renderPhase1();renderAudit();return phase1;})
     .catch(error=>{phase1.loading=null;$('phase1Source').textContent='Official data could not be loaded';$('phase1Recommendations').innerHTML=`<div class="card-body"><p class="empty">${esc(error.message)}</p></div>`;$('auditBody').innerHTML=`<div class="card-body"><p class="empty">${esc(error.message)}</p></div>`;throw error;});
   return phase1.loading;
+}
+
+// ---------- Spring 2026–27 planner (real sections) ----------
+const SP=window.SpringPlanner;
+const spring={result:null,active:0,constraints:null};
+const PLAN_COLORS=['var(--orange)','var(--blue)','var(--green)','var(--amber)','var(--red)','#9B7BD6'];
+const DAY_ORDER=['M','T','W','R','F'], DAY_NAMES={M:'Mon',T:'Tue',W:'Wed',R:'Thu',F:'Fri'};
+
+function plannerFormConstraints(){
+  return {mustInclude:$('plMust').value.split(/[,;]+/).map(x=>x.trim()).filter(Boolean),maxCourses:Number($('plMax').value),
+    earliestStart:$('plStart').value||undefined,latestEnd:$('plEnd').value||undefined,
+    avoidDays:[...document.querySelectorAll('[data-free-day]:checked')].map(i=>i.dataset.freeDay),interests:selectedPhase1Interests()};
+}
+function syncPlannerForm(c){
+  $('plMust').value=(c.mustInclude||[]).join(', '); $('plMax').value=String(c.maxCourses||4);
+  $('plStart').value=c.earliestStart||''; $('plEnd').value=c.latestEnd||'';
+  document.querySelectorAll('[data-free-day]').forEach(i=>{i.checked=(c.avoidDays||[]).includes(i.dataset.freeDay);});
+}
+
+async function runSpringPlanner(constraints,actor){
+  await loadPhase1();
+  if(!phase1.recommendations.length) renderPhase1();
+  spring.constraints=constraints; spring.active=0;
+  spring.result=SP.planSpring({offerings:phase1.offerings,audit:phase1.audit,recommendations:phase1.recommendations,constraints});
+  renderSpringPlans();
+  log(actor,`built ${spring.result.plans.length} Spring 2026–27 plan${spring.result.plans.length===1?'':'s'} from real sections${constraints.mustInclude?.length?` (must include ${constraints.mustInclude.join(', ')})`:''}.`);
+  return spring.result;
+}
+
+function weekGrid(plan){
+  const lo=8*60, hi=22*60, px=0.5, height=(hi-lo)*px;
+  const color=code=>PLAN_COLORS.at(plan.courses.findIndex(c=>c.code===code)%PLAN_COLORS.length);
+  const hours=[]; for(let h=8;h<=22;h+=2) hours.push(`<span style="top:${(h*60-lo)*px}px">${(h+11)%12+1}${h>=12?'p':'a'}</span>`);
+  const cols=DAY_ORDER.map(d=>{
+    const blocks=plan.meetings.filter(m=>m.days.includes(d)).map(m=>{
+      const top=Math.max(0,(m.start-lo)*px), h=Math.max(14,(m.end-m.start)*px), c=color(m.code);
+      const part=/L-/.test(m.section)?' lab':/R-/.test(m.section)?' rec':'';
+      return `<div class="wk-blk ${m.occasional?'occasional':''}" style="top:${top}px;height:${h}px;border-color:${c};background:color-mix(in srgb, ${c} 16%, transparent)" title="${esc(m.code+part+' · '+SP.meetingLabel(m)+(m.occasional?' · exam slot':''))}"><b>${esc(m.code)}${part}</b>${m.occasional?'exam slot':esc(m.building)}</div>`;
+    }).join('');
+    return `<div class="wk-col" style="height:${height}px">${blocks}</div>`;
+  }).join('');
+  return `<div class="wk" role="img" aria-label="Weekly view of ${esc(plan.courses.map(c=>c.code).join(', '))}"><div class="wk-head"></div>${DAY_ORDER.map(d=>`<div class="wk-head">${DAY_NAMES[d]}</div>`).join('')}<div class="wk-hours" style="height:${height}px">${hours.join('')}</div>${cols}</div>`;
+}
+
+function renderSpringPlans(){
+  const r=spring.result; if(!r) return;
+  const notes=r.notes.length?`<ul class="pl-notes">${r.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'';
+  if(!r.plans.length){ $('plannerOut').innerHTML=notes||'<p class="empty">No plan fits these limits.</p>'; return; }
+  const p=r.plans[spring.active]||r.plans[0];
+  const tabs=`<div class="pl-tabs" role="tablist">${r.plans.map((x,i)=>`<button type="button" class="pl-tab" role="tab" aria-selected="${i===spring.active}" data-plan-tab="${i}">Plan ${i+1} · ${x.courses.length} courses · ${x.coveredItems.length} audit items</button>`).join('')}</div>`;
+  const rows=p.courses.map(c=>c.parts.map((part,j)=>`<tr><td>${j?'':`<code>${esc(c.code)}</code> ${esc(c.title)}<br><span style="color:var(--text-3)">${c.credits} credit</span>`}</td><td>${esc(part.kind)} ${esc(part.section.split(' ').pop())}</td><td class="crn">${esc(part.crn)}</td><td>${part.meetings.map(esc).join('<br>')||'TBA'}</td><td>${part.seats}</td><td>${j?'':esc(c.closes.join('; ')||'—')}</td></tr>`).join('')).join('');
+  const planB=p.courses.map(c=>{const alts=p.planB[c.code]||[]; return `<li><b>${esc(c.code)}</b>: ${alts.length?alts.map(a=>`${esc(a.code)} ${esc(a.parts.map(x=>x.section.split(' ').pop()+' ('+(x.meetings[0]||'TBA')+')').join(' + '))} — ${esc(a.why)}`).join('; '):'no swap fits the rest of this plan'}</li>`;}).join('');
+  const warns=p.warnings.length?p.warnings.map(w=>`<li class="warn">${esc(w.text)}</li>`).join(''):'<li>No schedule warnings.</li>';
+  $('plannerOut').innerHTML=`${notes}${tabs}<div class="pl-grid"><div>${weekGrid(p)}</div><div>
+    <table class="pl-table"><thead><tr><th>Course</th><th>Part</th><th>CRN</th><th>Meets</th><th>Seats</th><th>Counts toward</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="pl-acts"><button type="button" class="btn btn-ghost btn-sm" id="plCopy">Copy CRNs</button><button type="button" class="btn btn-primary btn-sm" id="plSummary">Advisor meeting summary</button></div></div></div>
+    <div class="pl-sub">Plan B — swaps that keep the rest of this plan</div><ul class="pl-list">${planB}</ul>
+    <div class="pl-sub">Check before registering</div><ul class="pl-list">${warns}</ul>
+    <p class="load-note">${p.totalCredits} credits · ${p.coveredItems.length} open audit items: ${esc(p.coveredItems.join('; '))}. Seats and times come from the Spring 2026–27 snapshot; register in Banner with these CRNs.</p>`;
+  $('plCopy').onclick=async()=>{const crns=p.courses.flatMap(c=>c.crns).join(', '); try{await navigator.clipboard.writeText(crns); $('plCopy').textContent='Copied';}catch{$('plCopy').textContent=crns;}};
+  $('plSummary').onclick=()=>openAdvisorSummary(spring.active);
+}
+
+// ---------- Advisor meeting summary ----------
+function buildAdvisorSummary(planIndex=spring.active){
+  const plan=spring.result?.plans?.[planIndex]||null;
+  const areas=phase1.areas.length?phase1.areas:P1.auditStatus(phase1.audit);
+  const graded=areas.filter(a=>!a.informational), items=graded.flatMap(a=>a.items), met=items.filter(i=>i.status==='met').length;
+  const questions=SP.advisorQuestions(plan,phase1.audit,phase1.recommendations);
+  const text=[`Advisor meeting — ${phase1.audit.program}`,`Prepared ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} from my degree audit snapshot (${auditDate()}) and the Spring 2026–27 section snapshot.`,'',
+    `Degree audit: ${met} of ${items.length} items met.`,...graded.map(a=>`- ${a.label}: still open — ${a.items.filter(i=>i.status==='not-met').map(i=>i.label).join('; ')||'none'}`),'',
+    ...(plan?[`Proposed Spring 2026–27 plan (${plan.totalCredits} credits):`,...plan.courses.map(c=>`- ${c.code} ${c.title}: ${c.parts.map(x=>`${x.kind} ${x.section.split(' ').pop()} CRN ${x.crn} (${x.meetings.join('; ')||'TBA'})`).join(' + ')} — counts toward ${c.closes.join('; ')||'electives'}`),
+      'Plan B:',...plan.courses.map(c=>`- ${c.code}: ${(plan.planB[c.code]||[]).map(a=>`${a.code} ${a.parts.map(x=>`${x.section.split(' ').pop()} ${x.meetings[0]||'TBA'}`).join(' + ')} (${a.why})`).join('; ')||'none fits'}`),
+      'Things to check:',...plan.warnings.map(w=>`- ${w.text}`),'']:['No Spring plan built yet.','']),
+    'Questions for my advisor:',...questions.map(q=>`- ${q}`)].join('\n');
+  const html=`<h2 id="sumTitle">Advisor meeting summary</h2><p class="meta">${esc(phase1.audit.program)} · prepared ${esc(new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}))} · audit snapshot ${esc(auditDate())} · Spring 2026–27 section snapshot (not live)</p>
+    <h3>Degree audit — ${met} of ${items.length} items met</h3><table><thead><tr><th>Area</th><th>Still open</th></tr></thead><tbody>${graded.map(a=>`<tr><td>${esc(a.label)}</td><td>${esc(a.items.filter(i=>i.status==='not-met').map(i=>i.label).join('; ')||'Met')}</td></tr>`).join('')}</tbody></table>
+    ${plan?`<h3>Proposed Spring 2026–27 plan — ${plan.totalCredits} credits</h3><table><thead><tr><th>Course</th><th>Sections · CRN · time</th><th>Counts toward</th></tr></thead><tbody>${plan.courses.map(c=>`<tr><td><b>${esc(c.code)}</b> ${esc(c.title)}</td><td>${c.parts.map(x=>`${esc(x.kind)} ${esc(x.section.split(' ').pop())} · CRN ${esc(x.crn)} · ${esc(x.meetings.join('; ')||'TBA')}`).join('<br>')}</td><td>${esc(c.closes.join('; ')||'—')}</td></tr>`).join('')}</tbody></table>
+    <h3>Plan B</h3><ul>${plan.courses.map(c=>`<li><b>${esc(c.code)}</b>: ${esc((plan.planB[c.code]||[]).map(a=>`${a.code} ${a.parts.map(x=>`${x.section.split(' ').pop()} ${x.meetings[0]||'TBA'}`).join(' + ')} (${a.why})`).join('; ')||'no swap fits')}</li>`).join('')}</ul>
+    <h3>Things to check</h3><ul>${plan.warnings.map(w=>`<li>${esc(w.text)}</li>`).join('')||'<li>None.</li>'}</ul>`:'<h3>Spring plan</h3><p>No plan built yet — use “Plan Spring 2026–27” first.</p>'}
+    <h3>Questions for my advisor</h3><ul>${questions.map(q=>`<li>${esc(q)}</li>`).join('')||'<li>None generated.</li>'}</ul>`;
+  return {plan,questions,text,html};
+}
+
+let summaryReturnFocus=null;
+async function openAdvisorSummary(planIndex){
+  await loadPhase1();
+  const s=buildAdvisorSummary(planIndex);
+  $('summarySheet').innerHTML=s.html; summaryReturnFocus=document.activeElement;
+  $('sumOv').classList.add('show'); $('sumClose').focus();
+  $('sumCopy').onclick=async()=>{try{await navigator.clipboard.writeText(s.text); $('sumCopy').textContent='Copied';}catch{$('sumCopy').textContent='Copy failed';}};
+  return s;
+}
+function closeAdvisorSummary(){ $('sumOv').classList.remove('show'); $('sumCopy').textContent='Copy as text'; summaryReturnFocus?.focus?.(); }
+$('sumClose').onclick=closeAdvisorSummary;
+$('sumPrint').onclick=()=>window.print();
+$('sumOv').addEventListener('click',e=>{ if(e.target===$('sumOv')) closeAdvisorSummary(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('sumOv').classList.contains('show')) closeAdvisorSummary(); });
+$('plannerForm').addEventListener('submit',e=>{e.preventDefault(); runSpringPlanner(plannerFormConstraints(),'human');});
+$('plannerOut').addEventListener('click',e=>{const t=e.target.closest('[data-plan-tab]'); if(t){spring.active=Number(t.dataset.planTab); renderSpringPlans();}});
+
+/** Plan in the shape the advisor model and chat cards read. */
+function planForTool(p,i){
+  return {plan:i+1,totalCredits:p.totalCredits,coveredItems:p.coveredItems,
+    courses:p.courses.map(c=>({code:c.code,title:c.title,credits:c.credits,countsToward:c.closes,
+      sections:c.parts.map(x=>({part:x.kind,section:x.section,crn:x.crn,meets:x.meetings,unreservedSeats:x.seats,instructor:x.instructor}))})),
+    planB:Object.fromEntries(Object.entries(p.planB).map(([k,v])=>[k,v.map(a=>({code:a.code,why:a.why,sections:a.parts.map(x=>`${x.section} ${x.meetings[0]||'TBA'}`)}))])),
+    warnings:p.warnings.map(w=>w.text)};
 }
 
 function flash(el){ if(!el) return; el.classList.remove('agent-hit'); void el.offsetWidth; el.classList.add('agent-hit'); setTimeout(()=>el.classList.remove('agent-hit'),1000); }
@@ -1290,6 +1467,28 @@ const TOOL_HANDLERS={
       courses:state.registered.map(c=>({code:c.code,title:c.title,instructor:c.instructor,credits:c.credits,schedule:A.describeSchedule(c),room:c.room})),
       waitlists:A.CATALOG.filter(c=>c.onWaitlist).map(c=>({code:c.code,position:c.waitlistPosition})),draft:draftSummary()};},
 
+  plan_spring_schedule:async(args={})=>{
+    const c={mustInclude:args.mustInclude||[],maxCourses:args.maxCourses||4,maxCredits:args.maxCredits,earliestStart:args.earliestStart,latestEnd:args.latestEnd,avoidDays:args.avoidDays||[],interests:args.interests||selectedPhase1Interests()};
+    syncPlannerForm(c);
+    const r=await runSpringPlanner(c,'agent');
+    showView('recommendations'); $('plannerCard').scrollIntoView({block:'start',behavior:'smooth'}); flash($('plannerCard'));
+    return {term:'Spring 2026–27',dataSource:SNAPSHOT_SOURCE,notes:r.notes,plans:r.plans.map(planForTool),
+      registrationNote:'Plans hold no seats. Spring registration happens in Banner with these CRNs; this prototype cannot register Spring sections.'};},
+
+  explain_section:async({courseCode,section})=>{
+    await loadPhase1();
+    const ex=SP.explainSection(phase1.offerings,courseCode,section,phase1.audit);
+    if(!ex) return {error:`${courseCode} is not offered in Spring 2026–27.`};
+    log('agent',`explained ${ex.code}-${ex.section}'s schedule, notes and restrictions.`);
+    return {...ex,dataSource:SNAPSHOT_SOURCE};},
+
+  prepare_advisor_summary:async({planNumber}={},ctx={})=>{
+    const idx=planNumber?planNumber-1:spring.active;
+    await loadPhase1();
+    const s=ctx.channel==='chat'?buildAdvisorSummary(idx):await openAdvisorSummary(idx); // in chat a card opens it, so the reply stays visible
+    log('agent','prepared an advisor meeting summary.');
+    return {display:ctx.channel==='chat'?'Shown as a card in the chat; the student clicks “Open summary” to view, print or copy it.':'Opened on screen with Print and Copy buttons.',includesPlan:s.plan?`Plan ${idx+1}`:'none — no Spring plan built yet',questions:s.questions,summaryText:s.text};},
+
   update_preferences:async(args={})=>doUpdatePreferences(args,'agent'),
 };
 
@@ -1314,12 +1513,14 @@ createAdvisorChat({
   offlineReply:handleAdvisorPrompt,
   getContext:()=>{
     const reg=state.registered.map(c=>c.code), draft=state.proposal?.plan?.map(c=>c.code)||[];
-    return `Date ${new Date().toLocaleDateString('en-CA')}. Student: ${state.profile.name}, ${state.profile.year}, ${state.profile.major}, ${state.profile.college} (demo profile). `+
+    return `Date ${new Date().toLocaleDateString('en-CA')}. Student: ${state.profile.name}, ${state.profile.major}, ${state.profile.college}; class year not known. `+
       `Current page: ${VIEW_META[currentView]?.[1]||currentView}. Registered: ${reg.join(', ')||'none'} (${regCredits()} credits). Draft: ${draft.join(', ')||'none'}.`;
   },
   actions:{
     showView,
     getDraft:draftSummary,
+    openSummary:i=>openAdvisorSummary(i),
+    showPlanner:()=>{showView('recommendations'); $('plannerCard').scrollIntoView({block:'start',behavior:'smooth'});},
     swap:(out,inCode)=>doSwap(out,inCode,'human'),
     async confirm(req){
       const before=JSON.stringify([state.registered.map(c=>c.code),A.CATALOG.filter(c=>c.onWaitlist).map(c=>c.code)]);

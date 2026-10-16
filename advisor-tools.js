@@ -30,7 +30,7 @@
       inputSchema: { type: 'object', properties: { courseCode: code('Course code such as CS360.') }, required: ['courseCode'] } },
 
     { name: 'build_schedule', kind: 'draft',
-      description: 'Propose an optimized semester schedule from the student’s constraints: credit cap, earliest start, latest end, priority topics, days to keep free. Only eligible, non-conflicting courses are selected. This produces a DRAFT shown on the page — no seats are held and nobody is enrolled. The result also reports the weekly workload in hours, project and team-work load, and which graduation requirement each course satisfies. Use suggest_alternatives or swap_draft_course to change one course without rebuilding, then register_course once the student agrees.',
+      description: 'DEMO ONLY — Fall 2026 sample catalog used by the Registration page. For planning the real Spring 2026–27 term use plan_spring_schedule instead. Proposes a schedule from the student’s constraints: credit cap, earliest start, latest end, priority topics, days to keep free. Only eligible, non-conflicting courses are selected. This produces a DRAFT shown on the page — no seats are held and nobody is enrolled. The result also reports the weekly workload in hours, project and team-work load, and which graduation requirement each course satisfies. Use suggest_alternatives or swap_draft_course to change one course without rebuilding, then register_course once the student agrees.',
       inputSchema: { type: 'object', properties: {
         maxCredits: { type: 'integer', minimum: 1, maximum: 21, description: 'Credit cap for the semester.' },
         earliestStart: { type: 'string', description: '24h time such as "10:00" — no class may start earlier.' },
@@ -81,6 +81,28 @@
     { name: 'get_schedule', kind: 'read',
       description: 'Return the student’s registered courses with instructors, meeting times, rooms, total credits, any waitlists they are on, and the current draft if one exists.',
       inputSchema: { type: 'object', properties: {} } },
+
+    { name: 'plan_spring_schedule', kind: 'draft',
+      description: 'Build up to three conflict-free Spring 2026–27 schedules from REAL sections in Bucknell’s public feed (saved snapshot): each course is paired with its required lab or recitation, sections with no unreserved seats are skipped, and courses are chosen to close as many open degree-audit items as possible. Returns, per plan, the sections with CRNs, meeting times and rooms, the audit items covered, a plan B for each course (another section or an alternative course that keeps the rest of the plan intact) and warnings (tight walks between buildings, evening exam slots, long days, two W2s, reserved seats, permission, restrictive section notes, unverified prerequisites). Shows the plans on the Smart Recommendations page. Holds no seats: Spring registration happens in Banner with the CRNs.',
+      inputSchema: { type: 'object', properties: {
+        mustInclude: { type: 'array', items: { type: 'string' }, description: 'Course codes the student wants in every plan, e.g. ["CSCI204"].' },
+        maxCourses: { type: 'integer', minimum: 1, maximum: 6, description: 'Number of credit-bearing courses (default 4).' },
+        maxCredits: { type: 'number', minimum: 0.5, maximum: 6, description: 'Bucknell course credits (most courses are 1.0; default 4.5).' },
+        earliestStart: { type: 'string', description: '24h time such as "10:00" — no weekly class earlier.' },
+        latestEnd: { type: 'string', description: '24h time such as "17:00" — no weekly class later.' },
+        avoidDays: { type: 'array', items: { type: 'string', enum: DAYS }, description: 'Weekdays to keep free of weekly classes.' },
+        interests: { type: 'array', items: { type: 'string', enum: ['ai', 'security', 'data'] }, description: 'Interest signals that break ties.' } } } },
+
+    { name: 'explain_section', kind: 'read',
+      description: 'Facts about one Spring 2026–27 course section for a plain-language explanation: meeting times (marking evening exam slots that are not weekly), required labs or recitations and their times, every designation code with its meaning, reserved vs unreserved seats, instructor permission, the section footnote verbatim with flags (restricted to certain students, preference given, prerequisite named, cross-listed), other sections, and which of the student’s open audit items it would count toward. Use it when the student asks what a note, code or restriction means or whether it affects them.',
+      inputSchema: { type: 'object', properties: {
+        courseCode: code('Course code such as CSCI204 or "LAMS 160".'),
+        section: { type: 'string', description: 'Section number such as "01". Omit for the first section.' } }, required: ['courseCode'] } },
+
+    { name: 'prepare_advisor_summary', kind: 'read',
+      description: 'Prepare a one-page summary for the student’s advisor meeting: degree-audit progress and open items, the chosen Spring plan (sections, CRNs, times, what each counts toward), plan B, schedule warnings and a list of questions to ask (double counting, unverified prerequisites, permission, W2 timing, required courses not offered in Spring). Opens it on screen with Print and Copy buttons. Call plan_spring_schedule first if the student wants a plan included.',
+      inputSchema: { type: 'object', properties: {
+        planNumber: { type: 'integer', minimum: 1, maximum: 3, description: 'Which plan to include (1–3). Defaults to the plan on screen.' } } } },
 
     { name: 'update_preferences', kind: 'draft',
       description: 'Save the student’s advising preferences so later recommendations respect them: interests, credit cap, earliest start, latest end, days to keep free. Only call when the student asks to change their defaults.',

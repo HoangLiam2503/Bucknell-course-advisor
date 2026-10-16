@@ -96,7 +96,7 @@ vercel dev            # static site + /api/advisor, reads .env.local
 Tests (no API key needed):
 
 ```bash
-npm test              # Phase 1 data checks + /api/advisor handler checks
+npm test              # Phase 1 data, audit ranking, planner and /api/advisor checks
 ```
 
 ## Test with a real agent
@@ -125,6 +125,17 @@ The student's transcript (16 completed courses across four terms — GPA and cre
 `recommendForAudit` in `phase1-recommender.js` ranks real Spring 2026–27 sections by the open audit items they would count toward: named major courses first, then courses whose designations (W2, CCIP, LBSC, RPI, NPJ, GBCC, SLSC, ARHC, NSMC) close several open items. One course fills at most one slot per designation within an area (e.g. one of the two W2 items), Social Science must be an Arts & Sciences course, and the natural science item excludes CSCI and MATH. Results carry cautions for missing or unverified prerequisites, instructor permission, section footnotes and double counting.
 
 The audit is a snapshot, not a live audit; production would read it from the degree-audit system after sign-in.
+
+### Spring 2026–27 planner, section explanations and advisor summary
+
+`spring-planner.js` (pure logic, tested by `test-planner.js`) works on the real Spring sections:
+
+- **Plans:** `planSpring` pairs each lecture with its required lab (`…L`) or recitation (`…R`), skips sections with no unreserved seats or outside the student's time limits, and runs a beam search for up to three conflict-free plans that close the most open audit items (named major courses first). Zero-credit evening meetings whose note says they are for exams are treated as exam slots: an overlap there is a warning, not a conflict. Each course gets a plan B — another section, or another course that counts toward the same item — that keeps the rest of the plan intact.
+- **Warnings:** 10-minute walks between different buildings, days with four or more meetings, evening meetings, exam-slot overlaps, two W2s, TBA times, reserved seats, instructor permission, restrictive section notes and unverified prerequisites.
+- **Explanations:** `explainSection` returns a section's times, required labs/recitations, designation codes with meanings, reserved vs unreserved seats, the footnote with flags, and the audit items it counts toward; the advisor turns it into plain language.
+- **Advisor summary:** a printable page (audit progress, chosen plan with CRNs, plan B, things to check, questions to ask) with Print / Save PDF and Copy as text.
+
+The planner card is on Smart Recommendations; the advisor uses `plan_spring_schedule`, `explain_section` and `prepare_advisor_summary`. Plans hold no seats — Spring registration happens in Banner with the CRNs.
 
 ### Phase 1: official 2026–27 Bucknell data
 
