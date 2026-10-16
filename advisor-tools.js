@@ -69,14 +69,14 @@
         leave: { type: 'boolean', description: 'Set true to remove the student from that waitlist instead.' } }, required: ['courseCode'] } },
 
     { name: 'get_degree_audit', kind: 'read',
-      description: 'Return the student’s degree audit for the B.S. in Computer Science (demo requirement map): credits earned, in progress and remaining, plus every requirement with its status (complete, in-progress, remaining), what still needs to be taken, and which qualifying courses are offered this term. Opens the Degree Audit page.',
+      description: 'Return the student’s degree audit (Area Requirement Summary, Computer Science B.S.): every requirement area and item with Met / Not Met status taken from the student’s own audit snapshot, the major courses already completed, and for each open item the eligible Spring 2026–27 sections that would count toward it (or why a required course cannot be taken yet). Opens the Degree Audit page. Use this for any question about what the student still needs.',
       inputSchema: { type: 'object', properties: {} } },
 
     { name: 'get_phase1_recommendations', kind: 'read',
-      description: 'Rank courses from official Bucknell sources: 2026–27 BSCS major requirements, the Spring 2026–27 public section/seat snapshot (not live), and College of Arts & Sciences core requirements from the Class of 2024 page. Returns major and college-core audit status, prerequisite-path value, interest matches, usable seats, reasons and cautions. Opens Smart Recommendations.',
+      description: 'Rank real Spring 2026–27 sections (public Bucknell feed, saved snapshot — not live) against the open items in the student’s degree audit. Each result lists which open audit items it would count toward (courses that close several rank higher), prerequisites, unreserved seats, instructor permission, section footnotes and other cautions. Opens Smart Recommendations.',
       inputSchema: { type: 'object', properties: {
         interests: { type: 'array', items: { type: 'string', enum: ['ai', 'security', 'data'] }, description: 'Interest signals to include in ranking.' },
-        stat227Completed: { type: 'boolean', description: 'Test switch: mark STAT 227 complete to verify that it stops being recommended as a missing requirement.' } } } },
+        stat227Completed: { type: 'boolean', description: 'Test switch: treat STAT 227 as completed to show how the ranking changes.' } } } },
 
     { name: 'get_schedule', kind: 'read',
       description: 'Return the student’s registered courses with instructors, meeting times, rooms, total credits, any waitlists they are on, and the current draft if one exists.',

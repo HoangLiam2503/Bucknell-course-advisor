@@ -53,3 +53,28 @@ const scienceRanked = advisor.recommend({ program, offerings, transcript: withou
 assert.ok(scienceRanked.some(x => x.reasons.some(r => /Natural science elective/.test(r))), 'Science-designated offerings should be surfaced when science requirements remain');
 
 console.log(`Phase 1 checks passed across ${offerings.length} official Spring sections.`);
+
+// ---------- Degree-audit driven ranking (student's Area Requirement Summary) ----------
+const audit = JSON.parse(fs.readFileSync('./data/degree-audit-snapshot.json', 'utf8'));
+const auditRanked = advisor.recommendForAudit({ audit, offerings, completed: audit.completedCourses, interests: [] });
+const pick = code => auditRanked.find(x => x.code === code);
+assert.equal(pick('CSCI204').eligible, true, 'CSCI204 is open to a student who has CSCI203');
+assert.deepEqual(pick('CSCI204').closes.map(c => c.id), ['csci-204']);
+assert.equal(pick('CSCI205').eligible, false, 'CSCI205 needs CSCI204 first');
+assert.equal(pick('CSCI476').eligible, false, 'Senior Design II needs CSCI475');
+assert.equal(pick('CSCI203'), undefined, 'completed courses are not recommended');
+assert.equal(auditRanked.filter(x => x.eligible)[0].code, 'CSCI204', 'the gateway major course ranks first');
+for (const r of auditRanked) {
+  const w2 = r.closes.filter(c => c.id.startsWith('w2-'));
+  assert.ok(w2.length <= 1, `${r.code} fills at most one W2 slot`);
+  if (r.closes.some(c => c.id === 'social-science')) assert.equal(r.section.College, 'AS', 'social science must be an Arts & Sciences course');
+  if (r.closes.some(c => c.id === 'major-natural-science')) assert.ok(!['CSCI', 'MATH'].includes(r.section.Subj), 'natural science excludes CSCI and MATH');
+  assert.ok(!r.closes.some(c => ['w1', 'foreign-language', 'quantitative-reasoning', 'first-semester-seminar', 'natural-science-math'].includes(c.id)), 'met items are not targeted');
+}
+const multi = auditRanked.find(x => x.eligible && x.closes.length >= 3);
+assert.ok(multi && multi.reasons.some(r => /several requirements/.test(r)), 'courses closing several items are called out');
+assert.ok(multi.cautions.some(c => /Confirm with your advisor/.test(c)), 'double counting carries a caution');
+const simulated = advisor.recommendForAudit({ audit, offerings, completed: audit.completedCourses, extraCompleted: ['STAT227'] });
+assert.equal(simulated.find(x => x.code === 'STAT227'), undefined, 'simulated STAT227 drops out');
+assert.equal(advisor.auditStatus(audit, ['STAT227']).find(a => a.id === 'major-related').items.find(i => i.id === 'stat-227').status, 'met');
+console.log(`Audit ranking checks passed (${auditRanked.filter(x => x.eligible).length} eligible Spring courses for the open items).`);

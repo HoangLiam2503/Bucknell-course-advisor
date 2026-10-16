@@ -179,5 +179,89 @@
     return [...byCourse.values()].sort((a, b) => Number(b.eligible) - Number(a.eligible) || b.score - a.score || a.code.localeCompare(b.code));
   }
 
-  return { PREREQUISITES, TAGS, codeOf, availableSeats, prerequisiteStatus, requirementStatus, collegeCoreStatus, subjectAffinity, recommend };
+  // ---------- Degree-audit driven ranking ----------
+  // The audit snapshot (data/degree-audit-snapshot.json) is the source of truth for what is met;
+  // sections are ranked by how many still-open audit items they would close.
+
+  /** Audit items with their status; extraCompleted marks course items met (e.g. a simulation). */
+  function auditStatus(audit, extraCompleted = []) {
+    const extra = new Set(extraCompleted);
+    return audit.areas.map(area => ({
+      ...area,
+      items: area.items.map(item => (item.status === 'not-met' && (item.courses || []).length && item.courses.every(c => extra.has(c)))
+        ? { ...item, status: 'met', simulated: true } : item),
+    }));
+  }
+
+  /** Open audit items a section would count toward. */
+  function auditItemsForSection(areas, section) {
+    const code = codeOf(section);
+    const sectionReqs = (section.Reqs || []).map(r => r.Code);
+    const hits = [];
+    for (const area of areas) {
+      if (area.informational) continue;
+      const usedDesignations = new Set(); // one course fills only one slot per designation within an area (e.g. two W2 items)
+      for (const item of area.items) {
+        if (item.status !== 'not-met') continue;
+        if (item.courses && item.courses.includes(code)) hits.push({ area, item, kind: 'course' });
+        else if (item.designation && sectionReqs.includes(item.designation) && !usedDesignations.has(item.designation)
+          && !(item.excludedSubjects || []).includes(section.Subj)
+          && (!item.college || section.College === item.college)) {
+          usedDesignations.add(item.designation);
+          hits.push({ area, item, kind: 'designation' });
+        }
+      }
+    }
+    return hits;
+  }
+
+  const KNOWN_PREREQ_SUBJECTS = ['CSCI', 'MATH', 'STAT'];
+
+  function recommendForAudit({ audit, offerings, completed = [], interests = [], extraCompleted = [] }) {
+    const done = new Set([...completed, ...extraCompleted].map(c => String(c).replace(/\s/g, '').toUpperCase()));
+    const areas = auditStatus(audit, extraCompleted);
+    const byCourse = new Map();
+    for (const section of offerings) {
+      if (/[LR]$/.test(String(section.Number)) || Number(section.Credit) === 0) continue;
+      const code = codeOf(section);
+      if (done.has(code)) continue;
+      const hits = auditItemsForSection(areas, section);
+      const tags = TAGS[code] || [];
+      const interestMatches = tags.filter(tag => interests.includes(tag));
+      if (!hits.length && !interestMatches.length) continue;
+
+      const prereq = prerequisiteStatus(code, done);
+      const unlocks = (UNLOCKS[code] || []).filter(next => !done.has(next));
+      const openSeats = availableSeats(section);
+      const reasons = [], cautions = [];
+      let score = 0;
+      // Named major courses lead; each designation adds less, so stacking gen-eds cannot outrank a gateway major course.
+      for (const hit of hits) if (hit.kind === 'course') score += hit.area.id === 'cs-major' ? 60 : 50;
+      const designationCount = hits.filter(h => h.kind === 'designation').length;
+      if (designationCount) score += Math.min(50, 25 + (designationCount - 1) * 12);
+      if (hits.length) reasons.push(`Counts toward ${hits.length} open audit item${hits.length === 1 ? '' : 's'}: ${hits.map(h => h.item.label).join('; ')}.`);
+      if (hits.length > 1) reasons.push('Closes several requirements with one course.');
+      if (unlocks.length) { score += Math.min(20, unlocks.length * 5); reasons.push(`Unlocks ${unlocks.join(', ')}.`); }
+      if (interestMatches.length) { score += interestMatches.length * 8; reasons.push(`Matches interest: ${interestMatches.join(', ')}.`); }
+      if (openSeats > 0) { score += Math.min(5, Math.ceil(openSeats / 5)); reasons.push(`${openSeats} unreserved seat${openSeats === 1 ? '' : 's'} in the snapshot.`); }
+      else cautions.push('No unreserved seats in the snapshot.');
+      if (!prereq.met) cautions.push(`Missing prerequisite: ${prereq.missing.map(x => x.join(' or ')).join('; ')}.`);
+      else if (!PREREQUISITES[code] && KNOWN_PREREQ_SUBJECTS.includes(section.Subj) && Number(section.Number) >= 200) cautions.push('Prerequisites are not in the demo data — check the Course Guide.');
+      const designationHits = hits.filter(h => h.kind === 'designation');
+      if (designationHits.length > 1 || (designationHits.length && hits.some(h => h.kind === 'course'))) cautions.push('Confirm with your advisor that one course may count toward each of these.');
+      if (hits.some(h => h.item.designation === 'W2')) cautions.push('One of the two W2 courses must be taken after the first year.');
+      if (section.HasPerm === 'Y') cautions.push('Instructor permission required.');
+      if (section.Footnote) cautions.push(`Section note: ${String(section.Footnote).slice(0, 180)}`);
+
+      const candidate = { code, title: section.Title, score, eligible: prereq.met && openSeats > 0, reasons, cautions, tags,
+        closes: hits.map(h => ({ area: h.area.label, item: h.item.label, id: h.item.id })), section };
+      const existing = byCourse.get(code);
+      if (!existing || availableSeats(section) > availableSeats(existing.section)) byCourse.set(code, { ...candidate, sectionCount: (existing?.sectionCount || 0) + 1 });
+      else existing.sectionCount += 1;
+    }
+    return [...byCourse.values()].sort((a, b) => Number(b.eligible) - Number(a.eligible) || b.score - a.score || a.code.localeCompare(b.code));
+  }
+
+  return { PREREQUISITES, TAGS, codeOf, availableSeats, prerequisiteStatus, requirementStatus, collegeCoreStatus, subjectAffinity, recommend,
+    auditStatus, auditItemsForSection, recommendForAudit };
 });

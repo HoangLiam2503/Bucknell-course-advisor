@@ -1,0 +1,81 @@
+{
+  "title": "Area Requirement Summary",
+  "program": "Computer Science Major (B.S.), College of Arts & Sciences",
+  "source": "Transcribed from the student's own degree audit (Area Requirement Summary) shared on 2026-10-15. Met / Not Met reflects that audit; it is a snapshot, not a live audit.",
+  "capturedOn": "2026-10-15",
+  "completedCourses": ["CSCI203", "MATH201", "MATH202"],
+  "areas": [
+    {
+      "id": "cs-major",
+      "label": "Computer Science Major",
+      "items": [
+        { "id": "csci-201", "label": "CSCI 201", "courses": ["CSCI201"], "status": "not-met" },
+        { "id": "csci-203", "label": "CSCI 203", "courses": ["CSCI203"], "status": "met" },
+        { "id": "csci-204", "label": "CSCI 204", "courses": ["CSCI204"], "status": "not-met" },
+        { "id": "csci-205", "label": "CSCI 205", "courses": ["CSCI205"], "status": "not-met" },
+        { "id": "csci-306", "label": "CSCI 306", "courses": ["CSCI306"], "status": "not-met" },
+        { "id": "csci-307", "label": "CSCI 307", "courses": ["CSCI307"], "status": "not-met" },
+        { "id": "csci-308", "label": "CSCI 308", "courses": ["CSCI308"], "status": "not-met" },
+        { "id": "csci-311", "label": "CSCI 311", "courses": ["CSCI311"], "status": "not-met" },
+        { "id": "csci-315", "label": "CSCI 315", "courses": ["CSCI315"], "status": "not-met" },
+        { "id": "csci-341", "label": "CSCI 341", "courses": ["CSCI341"], "status": "not-met" },
+        { "id": "csci-345", "label": "CSCI 345", "courses": ["CSCI345"], "status": "not-met" },
+        { "id": "culminating", "label": "Culminating Experience - CSCI 475 and CSCI 476", "courses": ["CSCI475", "CSCI476"], "status": "not-met" }
+      ]
+    },
+    {
+      "id": "major-related",
+      "label": "Major-related Courses",
+      "items": [
+        { "id": "math-201", "label": "MATH 201", "courses": ["MATH201"], "status": "met" },
+        { "id": "math-202", "label": "MATH 202", "courses": ["MATH202"], "status": "met" },
+        { "id": "stat-227", "label": "STAT 227", "courses": ["STAT227"], "status": "not-met" },
+        { "id": "math-241", "label": "MATH 241", "courses": ["MATH241"], "status": "not-met" },
+        { "id": "major-lab-science", "label": "1 Lab Science course", "designation": "LBSC", "status": "not-met" },
+        { "id": "major-natural-science", "label": "1 Natural Science course (excludes CSCI and MATH)", "designation": "NSMC", "excludedSubjects": ["CSCI", "MATH"], "status": "not-met" }
+      ]
+    },
+    {
+      "id": "writing",
+      "label": "University Writing Requirement",
+      "note": "3 courses in total: 1 W1 and 2 W2.",
+      "items": [
+        { "id": "w1", "label": "1 W1 course (first year)", "designation": "W1", "status": "met" },
+        { "id": "w2-after-w1", "label": "1 W2 course, taken after W1", "designation": "W2", "status": "not-met" },
+        { "id": "w2-after-first-year", "label": "1 W2 course, taken after the first year", "designation": "W2", "status": "not-met", "timing": "Must be taken after the first year." }
+      ]
+    },
+    {
+      "id": "foundational",
+      "label": "Foundational Experiences",
+      "items": [
+        { "id": "first-semester-seminar", "label": "First-semester Seminar", "designation": "FOUN", "status": "met" },
+        { "id": "integrated-perspectives", "label": "Integrated Perspectives course", "designation": "CCIP", "status": "not-met" },
+        { "id": "foreign-language", "label": "Foreign Language course", "designation": "CCFL", "status": "met" },
+        { "id": "foundational-lab-science", "label": "Lab Science (LBSC) course", "designation": "LBSC", "status": "not-met" },
+        { "id": "quantitative-reasoning", "label": "Quantitative Reasoning course", "designation": "CCQR", "status": "met" },
+        { "id": "race-power-inequality", "label": "Race, Power and Inequality course", "designation": "RPI", "status": "not-met" },
+        { "id": "nature-people-justice", "label": "Nature, People and Justice course", "designation": "NPJ", "status": "not-met" },
+        { "id": "global-connections", "label": "Global Connections course", "designation": "GBCC", "status": "not-met" }
+      ]
+    },
+    {
+      "id": "disciplinary",
+      "label": "Disciplinary Exploration",
+      "note": "A maximum of 1 AP or IB credit may be used in each Disciplinary Exploration requirement.",
+      "items": [
+        { "id": "natural-science-math", "label": "2 Natural Science and Mathematics courses", "designation": "NSMC", "count": 2, "status": "met" },
+        { "id": "social-science", "label": "2 Social Science courses (College of Arts and Sciences)", "designation": "SLSC", "count": 2, "college": "AS", "status": "not-met" },
+        { "id": "arts-humanities", "label": "4 Arts and Humanities courses", "designation": "ARHC", "count": 4, "status": "not-met" }
+      ]
+    },
+    {
+      "id": "electives",
+      "label": "Academic Electives",
+      "informational": true,
+      "items": [
+        { "id": "academic-electives", "label": "Electives as needed to reach the credits required for the degree", "status": "info" }
+      ]
+    }
+  ]
+}

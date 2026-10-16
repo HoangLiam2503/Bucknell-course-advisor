@@ -128,9 +128,9 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     const items = recs.map((r, i) => `
       <li><div class="row"><span class="rank">${i + 1}</span><code>${esc(r.code)}</code><b>${esc(r.title)}</b></div>
         <div class="meta">Sec ${esc(r.section)} · ${esc(r.meeting)} · ${r.usableSeats} usable seat${r.usableSeats === 1 ? '' : 's'}</div>
-        <div class="why">${esc((r.reasons || [])[0] || '')}</div>
+        <div class="why">${esc(r.closes?.length ? `Counts toward: ${r.closes.join(' · ')}` : (r.reasons || [])[0] || '')}</div>
         ${(r.cautions || []).slice(0, 1).map(c => `<div class="warn">${esc(c)}</div>`).join('')}</li>`).join('');
-    const el = card(`<div class="hd"><span class="kind rec">Spring 2026–27 · snapshot</span><span>top ${recs.length}</span></div>
+    const el = card(`<div class="hd"><span class="kind rec">Spring 2026–27 · vs your audit</span><span>top ${recs.length}</span></div>
       <ul>${items}</ul><p class="src">${esc(result.dataSource || '')}</p>
       <div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-act="open">Open Smart Recommendations</button></div>`);
     el.querySelector('[data-act="open"]').onclick = () => actions.showView('recommendations');

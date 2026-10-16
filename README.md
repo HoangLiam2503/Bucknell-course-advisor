@@ -118,6 +118,14 @@ Registration (catalog + plan side by side), Course Catalog (full width), My Sche
 
 The student's transcript (16 completed courses across four terms — GPA and credits earned are computed from it, not hard-coded), the B.S. Computer Science requirement map, and the Fall 2026 catalog (22 sections with instructors, rooms, prerequisites, GPA minimums, seats, waitlists and meeting times) are seeded in `engine.js` so the demo runs without a backend. Swapping in a real SIS API means replacing `CATALOG`, `DEFAULT_PROFILE`, and the `seats` mutations in `index.html`.
 
+### Degree audit snapshot (drives requirements and recommendations)
+
+`data/degree-audit-snapshot.json` transcribes a real Computer Science B.S. *Area Requirement Summary* (Computer Science Major, Major-related Courses, University Writing, Foundational Experiences, Disciplinary Exploration, Academic Electives) with each item's Met / Not Met status. The Degree Audit page, Smart Recommendations, `get_degree_audit` and `get_phase1_recommendations` all read it.
+
+`recommendForAudit` in `phase1-recommender.js` ranks real Spring 2026–27 sections by the open audit items they would count toward: named major courses first, then courses whose designations (W2, CCIP, LBSC, RPI, NPJ, GBCC, SLSC, ARHC, NSMC) close several open items. One course fills at most one slot per designation within an area (e.g. one of the two W2 items), Social Science must be an Arts & Sciences course, and the natural science item excludes CSCI and MATH. Results carry cautions for missing or unverified prerequisites, instructor permission, section footnotes and double counting.
+
+The audit is a snapshot, not a live audit; production would read it from the degree-audit system after sign-in.
+
 ### Phase 1: official 2026–27 Bucknell data
 
 The migration away from demo data has started in a separate, testable layer:

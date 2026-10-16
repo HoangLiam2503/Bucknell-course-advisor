@@ -296,6 +296,8 @@
   .rec-course .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .rec-course h3{font-size:14.5px;margin:0;font-weight:600;}
   .rec-course h3 code{font-family:'Roboto Mono',monospace;font-size:11.5px;color:var(--orange);margin-right:7px;}
+  .closes-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .closes{font-size:10.5px;padding:3px 7px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(62,175,124,.3);}
   .rec-course .meta{font-size:11.5px;color:var(--text-3);margin-top:5px;line-height:1.5;}
   .rec-course ul{margin:8px 0 0;padding-left:17px;color:var(--text-2);font-size:12px;line-height:1.5;}
   .rec-course li.warn{color:var(--amber);}
@@ -512,7 +514,7 @@
     <!-- Degree audit view -->
     <section class="view" id="view-audit">
       <div class="audit-sum" id="auditSum"></div>
-      <div class="card"><div class="card-head"><h2>Bachelor of Science in Computer Science</h2><span class="eyebrow">Catalog year 2024</span></div><div id="auditBody"></div></div>
+      <div class="card"><div class="card-head"><h2>Area Requirement Summary</h2><span class="eyebrow">Computer Science Major (B.S.) · from your audit</span></div><div id="auditBody"></div></div>
     </section>
 
     <!-- Transcript view -->
@@ -524,7 +526,7 @@
     <section class="view" id="view-recommendations">
       <div class="official-note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>
-        <div><b>Phase 1 sandbox · official Bucknell data</b>Recommendations combine the 2026–27 BSCS catalog, the Spring 2026–27 public section/seat feed, and the College of Arts & Sciences core requirements from Bucknell’s Class of 2024 page. The two cohorts are labelled separately; production must select Liam’s actual entry-year catalog.</div>
+        <div><b>Based on your degree audit · official Spring 2026–27 sections</b>Requirement status comes from your Area Requirement Summary (snapshot). Sections, designations, footnotes and seats come from Bucknell’s public Course Information feed for Spring 2026–27 (saved snapshot, not live). Courses that close several open items rank higher.</div>
       </div>
       <div class="card" style="margin-bottom:18px">
         <div class="card-head"><h2>Test recommendation signals</h2><span class="eyebrow" id="phase1Source">Loading official snapshot…</span></div>
@@ -535,7 +537,7 @@
             <label class="choice"><input type="checkbox" data-phase-interest="data" checked> Data</label>
             <label class="choice"><input type="checkbox" id="phase1StatDone"> Simulate STAT 227 completed</label>
           </div>
-          <div class="load-note">Try the STAT 227 toggle: it should rank highly while required, then disappear after it is marked complete. Strong grades influence ranking only when a course still advances the degree.</div>
+          <div class="load-note">Try the STAT 227 toggle: it ranks highly while the audit says Not Met, then drops out once it is marked complete.</div>
         </div>
       </div>
       <div class="rec-layout">
@@ -545,16 +547,12 @@
         </div>
         <aside>
           <div class="card">
-            <div class="card-head"><h2>Remaining requirements</h2><span class="eyebrow">2026–27 BSCS</span></div>
-            <div class="card-body"><div class="req-list" id="phase1Requirements"><p class="empty">Loading degree map…</p></div></div>
+            <div class="card-head"><h2>Still needed</h2><span class="eyebrow">From your audit</span></div>
+            <div class="card-body"><div class="req-list" id="phase1Requirements"><p class="empty">Loading your audit…</p></div></div>
           </div>
           <div class="card">
-            <div class="card-head"><h2>Arts & Sciences Core</h2><span class="eyebrow">Class of 2024 source</span></div>
-            <div class="card-body"><div class="req-list" id="phase1CoreRequirements"><p class="empty">Loading college requirements…</p></div></div>
-          </div>
-          <div class="card">
-            <div class="card-head"><h2>Sample transcript</h2><span class="eyebrow">Test scenario</span></div>
-            <div class="card-body"><div class="load-note" style="margin-top:0">Representative official course codes are used so the new ranking logic can be tested independently of the legacy 3-credit demo.</div><div class="sample-courses" id="phase1Transcript"></div></div>
+            <div class="card-head"><h2>Audit source</h2><span class="eyebrow">Snapshot</span></div>
+            <div class="card-body" id="phase1AuditSource"></div>
           </div>
         </aside>
       </div>
@@ -616,20 +614,9 @@ const $ = (id) => document.getElementById(id);
 const initials = (n) => n.replace(/^Prof\.\s*/, '').split(/\s+/).map(w => w[0]).slice(0, 2).join('');
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
-const PHASE1_BASE_TRANSCRIPT = [
-  {code:'UNIV125',grade:'A-',designations:['FOUN','W1']},
-  {code:'SPAN101',grade:'B+',designations:['CCFL']},
-  {code:'HIST110',grade:'B',designations:['ARHC','GBCC']},
-  {code:'ECON103',grade:'B+',designations:['SLSC','DUSC']},
-  {code:'CSCI203',grade:'A'}, {code:'CSCI204',grade:'A-'}, {code:'CSCI205',grade:'B+'},
-  {code:'MATH201',grade:'B+',designations:['NMLG','CCQR']}, {code:'MATH202',grade:'A-',designations:['NSMC']}, {code:'MATH241',grade:'B'},
-  {code:'STAT216',grade:'A',designations:['NSMC','W2']}, {code:'PHYS211',grade:'B+',designations:['LBSC','NSMC']}
-];
-const phase1 = {program:null, core:null, offerings:null, loading:null, recommendations:[], statuses:[], coreStatuses:[]};
-
-function phase1Transcript(stat227Completed=$('phase1StatDone')?.checked){
-  return stat227Completed ? [...PHASE1_BASE_TRANSCRIPT,{code:'STAT227',grade:'A-'}] : [...PHASE1_BASE_TRANSCRIPT];
-}
+// ---------- Degree audit snapshot + official Spring 2026–27 sections ----------
+const P1=window.Phase1Advisor;
+const phase1 = {audit:null, offerings:null, loading:null, recommendations:[], areas:[]};
 
 function selectedPhase1Interests(){
   return [...document.querySelectorAll('[data-phase-interest]:checked')].map(input=>input.dataset.phaseInterest);
@@ -645,49 +632,64 @@ function meetingLabel(section){
   return meetings.length ? meetings.join('; ') : 'Meeting time TBA';
 }
 
+const auditDate=()=>phase1.audit?new Date(phase1.audit.capturedOn+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+const openItems=areas=>areas.filter(a=>!a.informational).flatMap(a=>a.items.filter(i=>i.status==='not-met').map(i=>({...i,area:a.label})));
+
 function phase1Result(args={}){
-  const transcript=phase1Transcript(args.stat227Completed);
   const interests=args.interests || selectedPhase1Interests();
-  const recommendations=window.Phase1Advisor.recommend({program:phase1.program,collegeCore:phase1.core,offerings:phase1.offerings,transcript,interests});
-  const completed=new Set(transcript.map(row=>row.code));
-  const statuses=window.Phase1Advisor.requirementStatus(phase1.program,completed,transcript);
-  const coreStatuses=window.Phase1Advisor.collegeCoreStatus(phase1.core,transcript);
-  return {transcript,interests,recommendations,statuses,coreStatuses};
+  const simulateStat=typeof args.stat227Completed==='boolean'?args.stat227Completed:!!$('phase1StatDone')?.checked;
+  const extraCompleted=simulateStat?['STAT227']:[];
+  const areas=P1.auditStatus(phase1.audit,extraCompleted);
+  const recommendations=P1.recommendForAudit({audit:phase1.audit,offerings:phase1.offerings,completed:phase1.audit.completedCourses,interests,extraCompleted});
+  return {interests,areas,recommendations,extraCompleted};
+}
+
+/** Eligible Spring options for one open audit item, best first. */
+function optionsFor(itemId,recs=phase1.recommendations){ return recs.filter(r=>r.eligible&&r.closes.some(c=>c.id===itemId)); }
+
+/** Why a named course item cannot be taken this Spring (not offered or blocked). */
+function courseItemNote(item,recs=phase1.recommendations){
+  if(!item.courses) return '';
+  const offered=recs.filter(r=>item.courses.includes(r.code));
+  if(!offered.length) return 'Not offered in Spring 2026–27.';
+  const blocked=offered.find(r=>!r.eligible);
+  return blocked&&!offered.some(r=>r.eligible)?(blocked.cautions[0]||'Not available this Spring.'):'';
 }
 
 function renderPhase1(args={}){
-  if(!phase1.program || !phase1.core || !phase1.offerings) return;
+  if(!phase1.audit || !phase1.offerings) return;
   const result=phase1Result(args);
-  phase1.recommendations=result.recommendations; phase1.statuses=result.statuses; phase1.coreStatuses=result.coreStatuses;
+  phase1.recommendations=result.recommendations; phase1.areas=result.areas;
   const eligible=result.recommendations.filter(item=>item.eligible);
-  $('phase1Source').textContent=`${phase1.offerings.length.toLocaleString()} official sections · term 202705`;
+  $('phase1Source').textContent=`${phase1.offerings.length.toLocaleString()} official sections · term 202705 · snapshot`;
   $('phase1Count').textContent=`${eligible.length} eligible · top 10 shown`;
-  $('phase1Transcript').textContent=result.transcript.map(row=>`${row.code} ${row.grade}`).join('  ·  ');
-  $('phase1Requirements').innerHTML=result.statuses.map(requirement=>`<div class="req-line"><span>${esc(requirement.label)}</span><span class="st ${requirement.status==='complete'?'complete':'remaining'}">${requirement.status==='complete'?'COMPLETE':'REMAINING'}</span></div>`).join('');
-  $('phase1CoreRequirements').innerHTML=result.coreStatuses.map(requirement=>{
-    const done=requirement.status==='complete', manual=requirement.status==='advisor-check';
-    return `<div class="req-line"><span>${esc(requirement.label)}<small style="display:block;color:var(--text-3);margin-top:3px">${esc(requirement.progress)}</small></span><span class="st ${done?'complete':manual?'in-progress':'remaining'}">${done?'COMPLETE':manual?'CHECK':'REMAINING'}</span></div>`;
-  }).join('');
+  const open=openItems(result.areas);
+  $('phase1Requirements').innerHTML=open.map(item=>{
+    const n=optionsFor(item.id).length, note=courseItemNote(item);
+    return `<div class="req-line"><span>${esc(item.label)}<small style="display:block;color:var(--text-3);margin-top:3px">${esc(item.area)}${note?` · ${esc(note)}`:n?` · ${n} Spring option${n===1?'':'s'}`:''}</small></span><span class="st remaining">NOT MET</span></div>`;
+  }).join('')||'<p class="empty">Every audit item is met.</p>';
+  $('phase1AuditSource').innerHTML=`<div class="load-note" style="margin-top:0">${esc(phase1.audit.source)}</div><div class="sample-courses">Completed major courses: ${phase1.audit.completedCourses.join(' · ')}${result.extraCompleted.length?` · ${result.extraCompleted.join(' · ')} (simulated)`:''}</div>`;
   $('phase1Recommendations').innerHTML=eligible.length ? eligible.slice(0,10).map((item,index)=>{
     const section=item.section, instructor=(section.Instructors||[]).map(x=>x.Display).join(', ')||'Instructor TBA';
-    const reasons=item.reasons.map(reason=>`<li>${esc(reason)}</li>`).join('');
+    const closes=item.closes.map(c=>`<span class="closes">${esc(c.item)}</span>`).join('');
+    const reasons=item.reasons.filter(r=>!r.startsWith('Counts toward')).map(reason=>`<li>${esc(reason)}</li>`).join('');
     const cautions=item.cautions.map(caution=>`<li class="warn">${esc(caution)}</li>`).join('');
     return `<article class="rec-course" id="phase1-${esc(item.code)}"><div class="rec-rank">${index+1}</div><div>
       <div class="head"><h3><code>${esc(item.code)}</code>${esc(item.title)}</h3><span class="status eligible">ELIGIBLE</span></div>
-      <div class="meta">Section ${esc(section.Section)} · ${esc(instructor)} · ${esc(meetingLabel(section))} · ${window.Phase1Advisor.availableSeats(section)} usable seats</div>
-      <ul>${reasons}${cautions}</ul></div><div class="rec-score"><b>${item.score}</b><span>priority score</span></div></article>`;
-  }).join('') : '<div class="card-body"><p class="empty">No eligible recommendations match this test scenario.</p></div>';
+      <div class="meta">Section ${esc(section.Section)}${item.sectionCount>1?` (+${item.sectionCount-1} more)`:''} · ${esc(instructor)} · ${esc(meetingLabel(section))} · ${P1.availableSeats(section)} unreserved seats · ${section.Credit} credit</div>
+      ${closes?`<div class="closes-row">${closes}</div>`:''}<ul>${reasons}${cautions}</ul></div><div class="rec-score"><b>${item.score}</b><span>priority score</span></div></article>`;
+  }).join('') : '<div class="card-body"><p class="empty">No eligible Spring sections close an open audit item.</p></div>';
+  if(currentView==='audit') renderAudit();
   return result;
 }
 
 async function loadPhase1(){
-  if(phase1.program && phase1.core && phase1.offerings) return phase1;
+  if(phase1.audit && phase1.offerings) return phase1;
   if(!phase1.loading) phase1.loading=Promise.all([
-    fetch('data/bscs-2026-27.json').then(r=>{if(!r.ok) throw new Error(`degree map ${r.status}`); return r.json();}),
-    fetch('data/cas-core-class-2024.json').then(r=>{if(!r.ok) throw new Error(`college core ${r.status}`); return r.json();}),
+    fetch('data/degree-audit-snapshot.json').then(r=>{if(!r.ok) throw new Error(`degree audit ${r.status}`); return r.json();}),
     fetch('data/spring-2027-sections.json').then(r=>{if(!r.ok) throw new Error(`course snapshot ${r.status}`); return r.json();})
-  ]).then(([program,core,offerings])=>{phase1.program=program;phase1.core=core;phase1.offerings=offerings;renderPhase1();return phase1;})
-    .catch(error=>{$('phase1Source').textContent='Official data could not be loaded';$('phase1Recommendations').innerHTML=`<div class="card-body"><p class="empty">${esc(error.message)}</p></div>`;throw error;});
+  ]).then(([audit,offerings])=>{phase1.audit=audit;phase1.offerings=offerings;renderPhase1();renderAudit();return phase1;})
+    .catch(error=>{phase1.loading=null;$('phase1Source').textContent='Official data could not be loaded';$('phase1Recommendations').innerHTML=`<div class="card-body"><p class="empty">${esc(error.message)}</p></div>`;$('auditBody').innerHTML=`<div class="card-body"><p class="empty">${esc(error.message)}</p></div>`;throw error;});
   return phase1.loading;
 }
 
@@ -870,23 +872,24 @@ function renderAlternatives(){
 }
 
 function renderAudit(){
-  const au=A.degreeAudit(state.profile,state.registered);
-  const donePct=(au.creditsEarned/au.creditsRequired)*100, progPct=(au.creditsInProgress/au.creditsRequired)*100;
-  const totalReq=au.areas.flatMap(a=>a.items).length, doneReq=au.areas.flatMap(a=>a.items).filter(i=>i.status==='complete').length;
+  if(!phase1.audit||!phase1.offerings){ $('auditSum').innerHTML=''; $('auditBody').innerHTML='<div class="card-body"><p class="empty">Loading your degree audit…</p></div>'; loadPhase1().catch(()=>{}); return; }
+  const areas=phase1.areas.length?phase1.areas:P1.auditStatus(phase1.audit);
+  const graded=areas.filter(a=>!a.informational), items=graded.flatMap(a=>a.items);
+  const met=items.filter(i=>i.status==='met').length, open=items.length-met;
   $('auditSum').innerHTML=`
-    <div class="stat"><div class="k">Credits toward degree</div><div class="v">${au.creditsEarned}<small>/ ${au.creditsRequired}</small></div>
-      <div class="meter"><i style="width:${donePct}%"></i><i class="blue" style="width:${progPct}%"></i></div>
-      <div class="legend"><span><i style="background:var(--orange)"></i>Earned</span><span><i style="background:var(--blue)"></i>In progress (${au.creditsInProgress})</span><span><i style="background:var(--raised)"></i>Remaining (${au.creditsRemaining})</span></div></div>
-    <div class="stat"><div class="k">Requirements satisfied</div><div class="v">${doneReq}<small>/ ${totalReq}</small></div><div class="sub">${au.areas.flatMap(a=>a.items).filter(i=>i.status==='in-progress').length} in progress this term</div></div>
-    <div class="stat"><div class="k">Cumulative GPA</div><div class="v">${au.gpa.toFixed(2)}</div><div class="sub">Minimum 2.00 to graduate</div></div>
-    <div class="stat"><div class="k">Projected graduation</div><div class="v">May 2028</div><div class="sub">On track at 15 credits per term</div></div>`;
-  $('auditBody').innerHTML=au.areas.map(a=>{
-    const n=a.items.filter(i=>i.status==='complete').length;
-    return `<div class="area"><h3>${a.area}<span>${n} of ${a.items.length} complete</span></h3>${a.items.map(it=>{
-      const codes=it.options.map(o=>`<code class="${it.completed.includes(o)?'done':it.inProgress.includes(o)?'prog':''}">${o}</code>`).join(' ');
-      const need=it.stillNeed?`Need ${it.stillNeed} more${it.availableThisTerm.length?` — offered this term: ${it.availableThisTerm.slice(0,4).join(', ')}${it.availableThisTerm.length>4?'…':''}`:''}`:'';
-      return `<div class="rq"><div><div class="n">${it.name}${it.choose>1?` <span style="color:var(--text-3);font-weight:400">(choose ${it.choose})</span>`:''}</div>
-        <div class="d">${codes}${need?`<br>${need}`:''}</div></div><span class="st ${it.status}">${it.status.replace('-',' ').toUpperCase()}</span></div>`;
+    <div class="stat"><div class="k">Audit items met</div><div class="v">${met}<small>/ ${items.length}</small></div>
+      <div class="meter"><i style="width:${met/items.length*100}%"></i></div><div class="sub">${open} still open</div></div>
+    <div class="stat"><div class="k">Requirement areas met</div><div class="v">${graded.filter(a=>a.items.every(i=>i.status==='met')).length}<small>/ ${graded.length}</small></div><div class="sub">All areas show Not Met</div></div>
+    <div class="stat"><div class="k">Open items with a Spring option</div><div class="v">${openItems(areas).filter(i=>optionsFor(i.id).length).length}<small>/ ${open}</small></div><div class="sub">From the Spring 2026–27 snapshot</div></div>
+    <div class="stat"><div class="k">Audit snapshot</div><div class="v" style="font-size:20px">${auditDate()}</div><div class="sub">Not a live audit — re-check before registering</div></div>`;
+  $('auditBody').innerHTML=areas.map(a=>{
+    const n=a.items.filter(i=>i.status==='met').length;
+    return `<div class="area"><h3>${esc(a.label)}${a.informational?'':` (${n===a.items.length?'Met':'Not Met'})`}<span>${a.informational?'Informational':`${n} of ${a.items.length} met`}</span></h3>${a.note?`<div class="rq"><div class="d">${esc(a.note)}</div></div>`:''}${a.items.map(it=>{
+      const opts=it.status==='not-met'?optionsFor(it.id):[];
+      const note=it.status==='not-met'?courseItemNote(it):'';
+      const detail=it.status!=='not-met'?'':note?esc(note):opts.length?`Spring 2026–27: ${opts.slice(0,4).map(o=>`<code>${esc(o.code)}</code>`).join(' ')}${opts.length>4?` +${opts.length-4} more`:''}`:'No eligible Spring 2026–27 section in the snapshot.';
+      const chip=it.status==='met'?['complete',it.simulated?'MET (SIMULATED)':'MET']:it.status==='not-met'?['remaining','NOT MET']:['in-progress','INFO'];
+      return `<div class="rq"><div><div class="n">${esc(it.label)}</div>${detail?`<div class="d">${detail}</div>`:''}</div><span class="st ${chip[0]}">${chip[1]}</span></div>`;
     }).join('')}</div>`;
   }).join('');
 }
@@ -909,9 +912,9 @@ const VIEW_META={
   registration:['Fall 2026 · Registration window open through Sep 12','Course Registration'],
   catalog:['Fall 2026 · 22 sections offered','Course Catalog'],
   schedule:['Fall 2026 · Week view','My Schedule'],
-  audit:['Bachelor of Science · Computer Science','Degree Audit'],
+  audit:['Computer Science Major (B.S.) · audit snapshot','Degree Audit'],
   transcript:['Unofficial · For advising use only','Transcript'],
-  recommendations:['Official Spring 2026–27 · Phase 1','Smart Recommendations'],
+  recommendations:['Spring 2026–27 · based on your degree audit','Smart Recommendations'],
 };
 function showView(v){
   if(!VIEW_META[v]) v='registration';
@@ -1114,14 +1117,15 @@ async function handleAdvisorPrompt(prompt){
   }
   if(/requirement|audit|graduate|tốt nghiệp|yêu cầu|còn thiếu/.test(lower)){
     await loadPhase1(); const result=renderPhase1(); showView('recommendations');
-    const major=result.statuses.filter(r=>r.status!=='complete').map(r=>r.label);
-    const core=result.coreStatuses.filter(r=>r.status==='remaining').map(r=>r.label);
-    return `I opened your official-data requirement view.\n\nMajor requirements remaining: ${major.length}. Next examples: ${major.slice(0,4).join('; ')}.\n\nArts & Sciences core remaining: ${core.length}. Next examples: ${core.slice(0,4).join('; ')}.\n\nThe core source is labelled Class of 2024; production must use your actual entry-year catalog.`;
+    const open=openItems(result.areas);
+    const major=open.filter(i=>/Major/.test(i.area)).map(i=>i.label);
+    const core=open.filter(i=>!/Major/.test(i.area)).map(i=>i.label);
+    return `From your degree audit snapshot (${auditDate()}):\n\nMajor and major-related items still open: ${major.length}. For example: ${major.slice(0,4).join('; ')}.\n\nUniversity and college items still open: ${core.length}. For example: ${core.slice(0,4).join('; ')}.\n\nThis is a snapshot, not a live audit — re-check it before registering.`;
   }
   if(/official|spring|recommend|đề xuất|gợi ý/.test(lower)){
     await loadPhase1(); const result=renderPhase1(); showView('recommendations');
     const top=result.recommendations.filter(r=>r.eligible).slice(0,5);
-    return `I opened Smart Recommendations using the official Spring snapshot. Top options for this sample scenario:\n${top.map((r,i)=>`${i+1}. ${r.code} — ${r.title} (${r.score} points)`).join('\n')}`;
+    return `I opened Smart Recommendations using the official Spring snapshot. Top options for your open audit items:\n${top.map((r,i)=>`${i+1}. ${r.code} — ${r.title}: ${r.closes.map(c=>c.item).join(' + ')}`).join('\n')}`;
   }
   if(/schedule|plan|semester|lịch|môn/.test(lower)){
     const constraints=parseAdvisorPlan(prompt), result=doBuildSchedule(constraints,'agent');
@@ -1190,7 +1194,10 @@ function registrationBlocker(codes){
 
 const TOOL_HANDLERS={
   get_student_profile:async()=>{log('agent','read the student profile.'); flash($('stats'));
-    return {...state.profile,registeredCourses:state.registered.map(c=>c.code),note:'Demo student profile for this prototype.'};},
+    const {completed,...demo}=state.profile;
+    return {...demo,degreeAudit:'Requirement status comes from the student’s own degree audit snapshot — call get_degree_audit.',
+      demoCatalogCompleted:completed,registeredCourses:state.registered.map(c=>c.code),
+      note:'GPA, class year, interests and demoCatalogCompleted belong to the demo profile used by the Fall 2026 demo catalog (schedule builder, registration). For real requirement status use get_degree_audit.'};},
 
   search_courses:async(args={})=>{
     const res=A.searchCourses(state.profile,state.registered,args);
@@ -1253,10 +1260,17 @@ const TOOL_HANDLERS={
       summary:leave?`Leave the ${c.code} waitlist.`:`Join the ${c.code} ${c.title} waitlist (${c.waitlist} already waiting).`,
       note:'A confirmation card is now shown to the student. Nothing changes until they confirm it themselves.'};},
 
-  get_degree_audit:async()=>{const au=A.degreeAudit(state.profile,state.registered); showView('audit'); flash($('auditBody').closest('.card')); log('agent','reviewed the degree audit.');
-    return {creditsEarned:au.creditsEarned,creditsInProgress:au.creditsInProgress,creditsRemaining:au.creditsRemaining,gpa:au.gpa,
-      dataSource:'Demo B.S. Computer Science requirement map for this prototype. For official 2026–27 requirements use get_phase1_recommendations.',
-      requirements:au.areas.map(a=>({area:a.area,items:a.items.map(i=>({name:i.name,status:i.status,stillNeed:i.stillNeed,completed:i.completed,inProgress:i.inProgress,offeredThisTerm:i.availableThisTerm}))}))};},
+  get_degree_audit:async()=>{
+    await loadPhase1();
+    const result=renderPhase1(); showView('audit'); flash($('auditBody').closest('.card')); log('agent','reviewed the degree audit snapshot.');
+    return {dataSource:`Student's own degree audit (Area Requirement Summary), snapshot ${phase1.audit.capturedOn} — not a live audit. Spring options come from the ${SNAPSHOT_SOURCE}`,
+      program:phase1.audit.program,completedMajorCourses:phase1.audit.completedCourses,
+      areas:result.areas.map(a=>({area:a.label,status:a.informational?'informational':a.items.every(i=>i.status==='met')?'met':'not met',note:a.note,
+        items:a.items.map(i=>{
+          const opts=i.status==='not-met'?optionsFor(i.id):[];
+          return {item:i.label,status:i.simulated?'met (simulated)':i.status,designation:i.designation,count:i.count,
+            ...(i.status==='not-met'?{springOptions:opts.slice(0,5).map(o=>o.code),springOptionCount:opts.length,note:courseItemNote(i)||undefined}:{})};
+        })}))};},
 
   get_phase1_recommendations:async(args={})=>{
     await loadPhase1();
@@ -1264,15 +1278,12 @@ const TOOL_HANDLERS={
     if(typeof args.stat227Completed==='boolean') $('phase1StatDone').checked=args.stat227Completed;
     const result=renderPhase1({interests:args.interests,stat227Completed:args.stat227Completed});
     showView('recommendations'); flash($('phase1Recommendations').closest('.card'));
-    log('agent','ranked Spring 2026–27 courses from the official Bucknell snapshot.');
-    return {dataSource:SNAPSHOT_SOURCE,student:{name:state.profile.name,college:state.profile.college,major:state.profile.major},catalogYear:phase1.program.catalogYear,
-      collegeCoreCohort:phase1.core.cohort,term:'202705',sectionCount:phase1.offerings.length,
-      catalogApplicability:phase1.program.catalogApplicability,collegeCoreSourceNote:phase1.core.sourceNote,interests:result.interests,
-      sampleTranscript:result.transcript.map(r=>`${r.code} ${r.grade}`),
-      remainingRequirements:result.statuses.filter(r=>r.status!=='complete').map(r=>({id:r.id,label:r.label,status:r.status})),
-      collegeCore:result.coreStatuses.map(r=>({group:r.group,label:r.label,status:r.status,progress:r.progress,matchedCourses:r.matchedCourses})),
+    log('agent','ranked Spring 2026–27 sections against the open items in the degree audit.');
+    return {dataSource:SNAPSHOT_SOURCE,auditSource:`Student's degree audit snapshot ${phase1.audit.capturedOn}`,term:'202705',sectionCount:phase1.offerings.length,
+      interests:result.interests,openAuditItems:openItems(result.areas).map(i=>({area:i.area,item:i.label})),
       recommendations:result.recommendations.filter(r=>r.eligible).slice(0,10).map(r=>({code:r.code,title:r.title,score:r.score,
-        section:r.section.Section,credits:r.section.Credit,meeting:meetingLabel(r.section),usableSeats:window.Phase1Advisor.availableSeats(r.section),reasons:r.reasons,cautions:r.cautions}))};},
+        closes:r.closes.map(c=>c.item),section:r.section.Section,otherSections:r.sectionCount-1,credits:r.section.Credit,meeting:meetingLabel(r.section),
+        usableSeats:P1.availableSeats(r.section),reasons:r.reasons,cautions:r.cautions}))};},
 
   get_schedule:async()=>{log('agent','read the current schedule.'); flash($('planCard'));
     return {totalCredits:regCredits(),maxCredits:state.profile.maxCredits,dataSource:DEMO_SOURCE,
