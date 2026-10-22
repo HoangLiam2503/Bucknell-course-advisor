@@ -1,37 +1,27 @@
 /* In-portal AI advisor chat.
    Runs the tool-use loop in the browser: /api/advisor relays each turn to Gemini,
    tool calls run against the portal's own handlers, and results are rendered as cards.
-   History is append-only (never edited) so the model's thinking blocks stay valid. */
+   History is append-only (never edited) so the model's thinking blocks stay valid.
+   The conversation is kept in sessionStorage so a reload does not lose it; demo state is
+   not, so a restored conversation tells the model the page was reset. */
 
 const MAX_ROUNDS = 6;
 const MAX_HISTORY = 70;
 const REQUEST_TIMEOUT_MS = 45_000;
 const LIMIT_KEY = 'advisorLimitReached';
+const CONVO_KEY = 'advisorConvo';
+const MAX_SAVED_BYTES = 500_000;
+const MAX_INPUT = 2000;
 
-const TOOL_LABELS = {
-  get_student_profile: 'Reading your profile…',
-  search_courses: 'Searching the catalog…',
-  check_eligibility: 'Checking eligibility…',
-  build_schedule: 'Building a draft schedule…',
-  suggest_alternatives: 'Finding alternatives…',
-  swap_draft_course: 'Updating the draft…',
-  explain_course_impact: 'Checking graduation impact…',
-  register_course: 'Preparing registration for your review…',
-  drop_course: 'Preparing the drop request…',
-  join_waitlist: 'Preparing the waitlist request…',
-  get_degree_audit: 'Checking your degree audit…',
-  get_phase1_recommendations: 'Ranking Spring 2026–27 courses…',
-  get_schedule: 'Reading your schedule…',
-  update_preferences: 'Saving your preferences…',
-  plan_spring_schedule: 'Building Spring plans from real sections…',
-  explain_section: 'Reading the section details…',
-  prepare_advisor_summary: 'Preparing your advisor summary…',
+const F = window.AdvisorFormat;
+const { esc } = F;
+const CARD_NAMES = {
+  build_schedule: 'draft schedule', swap_draft_course: 'draft schedule', get_phase1_recommendations: 'Spring recommendations',
+  suggest_alternatives: 'alternatives', plan_spring_schedule: 'Spring plan', prepare_advisor_summary: 'advisor summary', confirm: 'confirmation request',
 };
 
-const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
-const plain = (text) => String(text).replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#{1,6}\s+/gm, '').trim();
-
 function storage(fn) { try { return fn(window.sessionStorage); } catch { return null; } }
+const clock = (t = Date.now()) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
 class AdvisorHttpError extends Error {
   constructor(status, payload) { super(payload?.error || `HTTP ${status}`); this.status = status; this.payload = payload || {}; }
@@ -40,43 +30,119 @@ class AdvisorHttpError extends Error {
 /**
  * @param {object} o
  * @param {Record<string, Function>} o.handlers  tool name -> async (input, {channel:'chat'}) => result object
- * @param {object} o.actions  portal actions used by card buttons
+ * @param {object} o.actions  portal actions used by card buttons, code links and suggestions
  * @param {(text:string)=>Promise<string>} o.offlineReply  rule-based fallback when the AI service is unavailable
  * @param {()=>string} o.getContext  one-line portal context added to the first message of a conversation
  */
 export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions, offlineReply, getContext }) {
   const $ = (id) => document.getElementById(id);
-  const thread = $('advisorThread'), input = $('advisorInput'), sendBtn = $('advisorSend'), form = $('advisorForm');
+  const thread = $('advisorThread'), input = $('advisorInput'), sendBtn = $('advisorSend'), form = $('advisorForm'), counter = $('advisorCount');
   const welcomeHtml = thread.innerHTML;
 
   let messages = [];
+  let transcript = [];
   let pendingEvents = [];
   let busy = false, controller = null, offline = false, generation = 0;
   let locked = storage(s => s.getItem(LIMIT_KEY) === '1') === true;
+  let lastQuestion = '';
 
   // ---------- Rendering ----------
   function scroll() { thread.scrollTop = thread.scrollHeight; }
-  function bubble(role, text) {
+  function add(el) { thread.insertBefore(el, typingEl && typingEl.parentNode === thread ? typingEl : null); scroll(); return el; }
+  function record(entry) { transcript.push(entry); }
+
+  function turn(role, text, t = Date.now()) {
     const el = document.createElement('div');
-    el.className = `advisor-msg ${role}`;
-    el.textContent = role === 'ai' ? plain(text) : text;
-    thread.appendChild(el); scroll();
+    el.className = `advisor-turn ${role}`;
+    const body = role === 'ai' ? F.formatAnswer(text) : `<p>${esc(text)}</p>`;
+    el.innerHTML = `<div class="who"><span>${role === 'ai' ? 'Advisor' : 'You'}</span><time>${clock(t)}</time></div><div class="txt">${body}</div>`;
+    if (role === 'ai') {
+      const acts = document.createElement('div');
+      acts.className = 'turn-acts';
+      acts.innerHTML = '<button type="button" class="turn-btn" data-copy>Copy</button>';
+      el.appendChild(acts);
+      el.dataset.text = text;
+    }
+    return add(el);
+  }
+  function bubble(role, text) {
+    record({ k: role, text, t: Date.now() });
+    const el = turn(role, text);
+    if (role === 'ai') markLastAnswer(el);
     return el;
   }
-  function notice(text, tone = '') {
+  function markLastAnswer(el) {
+    thread.querySelectorAll('[data-again]').forEach(b => b.remove());
+    if (!lastQuestion || locked) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'turn-btn'; b.dataset.again = ''; b.textContent = 'Ask again';
+    el.querySelector('.turn-acts').appendChild(b);
+  }
+  function notice(text, tone = '', { save = true } = {}) {
+    if (save) record({ k: 'notice', text, tone });
     const el = document.createElement('div');
     el.className = `advisor-notice ${tone}`;
     el.setAttribute('role', tone === 'error' ? 'alert' : 'status');
     el.textContent = text;
-    thread.appendChild(el); scroll();
-    return el;
+    return add(el);
   }
-  function card(html) {
+  function card(html, name) {
+    record({ k: 'card', name });
     const el = document.createElement('div');
     el.className = 'advisor-card';
     el.innerHTML = html;
-    thread.appendChild(el); scroll();
-    return el;
+    return add(el);
+  }
+  function staleCard(name) {
+    const el = document.createElement('div');
+    el.className = 'advisor-card stale';
+    el.textContent = `Earlier ${CARD_NAMES[name] || 'card'} — the page was reloaded, so ask again for a current one.`;
+    return add(el);
+  }
+
+  // Step log: one collapsible list per question, showing every tool the advisor ran.
+  let steps = null;
+  function stepsBox() {
+    if (steps) return steps;
+    const el = document.createElement('details');
+    el.className = 'advisor-steps'; el.open = true;
+    el.innerHTML = '<summary>Working…</summary><ol></ol>';
+    steps = { el, list: el.querySelector('ol'), items: [] };
+    add(el);
+    return steps;
+  }
+  function stepStart(name) {
+    const box = stepsBox();
+    const li = document.createElement('li');
+    li.className = 'run';
+    li.innerHTML = `<span class="lbl">${esc(F.stepLabel(name, 'running'))}…</span><span class="sum"></span>`;
+    box.list.appendChild(li); scroll();
+    const item = { label: F.stepLabel(name, 'done'), summary: '', ok: true };
+    box.items.push(item);
+    return (ok, summary) => {
+      item.ok = ok; item.summary = summary;
+      li.className = ok ? 'ok' : 'err';
+      li.querySelector('.lbl').textContent = item.label;
+      li.querySelector('.sum').textContent = summary || '';
+    };
+  }
+  function renderStepsDone(el, items) {
+    const failed = items.filter(i => !i.ok).length;
+    el.querySelector('summary').textContent = `Checked ${items.length} thing${items.length === 1 ? '' : 's'}${failed ? ` · ${failed} failed` : ''}`;
+    el.open = false;
+  }
+  function closeSteps() {
+    if (!steps) return;
+    renderStepsDone(steps.el, steps.items);
+    record({ k: 'steps', items: steps.items });
+    steps = null;
+  }
+  function restoreSteps(items) {
+    const el = document.createElement('details');
+    el.className = 'advisor-steps';
+    el.innerHTML = `<summary></summary><ol>${items.map(i => `<li class="${i.ok ? 'ok' : 'err'}"><span class="lbl">${esc(i.label)}</span><span class="sum">${esc(i.summary || '')}</span></li>`).join('')}</ol>`;
+    renderStepsDone(el, items);
+    add(el);
   }
 
   let typingEl = null;
@@ -87,14 +153,35 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
       typingEl.setAttribute('role', 'status');
       thread.appendChild(typingEl);
     }
-    typingEl.innerHTML = `<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>${esc(label)}</span>`;
+    typingEl.innerHTML = `<span class="bar" aria-hidden="true"></span><span>${esc(label)}</span>`;
     scroll();
   }
   function stopTyping() { typingEl?.remove(); typingEl = null; }
 
+  function suggestions(list, { save = true } = {}) {
+    thread.querySelectorAll('.advisor-chips.follow').forEach(el => el.remove());
+    if (!list.length || locked) return;
+    if (save) record({ k: 'chips', list });
+    const el = document.createElement('div');
+    el.className = 'advisor-chips follow';
+    el.innerHTML = list.map(q => `<button type="button" class="advisor-chip" data-advisor-prompt="${esc(q)}">${esc(q)}</button>`).join('');
+    add(el);
+  }
+
+  /** Welcome chips depend on the page the student is on; refreshed while the conversation is empty. */
+  function refreshWelcome() {
+    const box = thread.querySelector('[data-welcome-chips]');
+    if (!box || transcript.length) return;
+    const fixed = ['Plan my Spring 2026–27 semester: 4 courses including CSCI 204, nothing before 10am.', "I'm meeting my advisor this week. Prepare a summary with questions to ask."];
+    const labels = { [fixed[0]]: 'Plan my Spring', [fixed[1]]: 'Advisor meeting prep' };
+    const list = [...fixed, ...F.followUps({ view: actions.getView(), hasDraft: !!actions.getDraft(), limit: 2 })];
+    box.innerHTML = list.map(q => `<button type="button" class="advisor-chip" data-advisor-prompt="${esc(q)}">${esc(labels[q] || q)}</button>`).join('');
+    if (locked) box.querySelectorAll('button').forEach(b => { b.disabled = true; });
+  }
+
   function setBusy(on) {
     busy = on;
-    sendBtn.textContent = on ? '■' : '↑';
+    sendBtn.textContent = on ? 'Stop' : 'Send';
     sendBtn.setAttribute('aria-label', on ? 'Stop the advisor' : 'Send message');
     sendBtn.classList.toggle('stop', on);
     input.disabled = on || locked;
@@ -105,7 +192,36 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     storage(s => s.setItem(LIMIT_KEY, '1'));
     input.disabled = true; sendBtn.disabled = true;
     input.placeholder = 'AI advisor paused — demo usage limit reached';
-    thread.querySelectorAll('[data-advisor-prompt]').forEach(b => { b.disabled = true; });
+    thread.querySelectorAll('[data-advisor-prompt], [data-again]').forEach(b => { b.disabled = true; });
+  }
+
+  // ---------- Persistence ----------
+  function save() {
+    const data = JSON.stringify({ v: 1, messages, transcript, lastQuestion });
+    storage(s => (data.length > MAX_SAVED_BYTES ? s.removeItem(CONVO_KEY) : s.setItem(CONVO_KEY, data)));
+  }
+  function restore() {
+    const raw = storage(s => s.getItem(CONVO_KEY));
+    if (!raw) return;
+    let data;
+    try { data = JSON.parse(raw); } catch { return; }
+    if (data?.v !== 1 || !Array.isArray(data.transcript) || !data.transcript.length) return;
+    messages = Array.isArray(data.messages) ? data.messages : [];
+    transcript = data.transcript;
+    lastQuestion = data.lastQuestion || '';
+    thread.querySelector('[data-welcome-chips]')?.remove();
+    let lastAi = null, chips = null;
+    for (const e of transcript) {
+      if (e.k === 'user' || e.k === 'ai') { const el = turn(e.k, e.text, e.t); if (e.k === 'ai') lastAi = el; }
+      else if (e.k === 'notice') notice(e.text, e.tone, { save: false });
+      else if (e.k === 'steps') restoreSteps(e.items || []);
+      else if (e.k === 'card') staleCard(e.name);
+      else if (e.k === 'chips') chips = e.list;
+    }
+    if (lastAi) markLastAnswer(lastAi);
+    if (chips) suggestions(chips, { save: false });
+    notice('Conversation restored. The demo registration and draft were reset by the reload.', '', { save: false });
+    if (messages.length) pendingEvents.push('The page was reloaded: the Fall demo registration, waitlists and draft were reset to their defaults, and any Spring plan on screen was cleared. Earlier cards in this conversation are stale.');
   }
 
   // ---------- Cards built from structured tool results ----------
@@ -120,7 +236,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
       <ul>${rows}</ul>
       <p class="src">${esc(d.dataSource)}</p>
       <div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-act="view">View on Registration</button>
-        <button type="button" class="btn btn-primary btn-sm" data-act="register">Review &amp; register</button></div>`);
+        <button type="button" class="btn btn-primary btn-sm" data-act="register">Review &amp; register</button></div>`, 'build_schedule');
     el.querySelector('[data-act="view"]').onclick = () => actions.showView('registration');
     el.querySelector('[data-act="register"]').onclick = (e) => confirmFlow({ action: 'register', courseCodes: d.courses.map(c => c.code) }, e.currentTarget);
   }
@@ -135,7 +251,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
         ${(r.cautions || []).slice(0, 1).map(c => `<div class="warn">${esc(c)}</div>`).join('')}</li>`).join('');
     const el = card(`<div class="hd"><span class="kind rec">Spring 2026–27 · vs your audit</span><span>top ${recs.length}</span></div>
       <ul>${items}</ul><p class="src">${esc(result.dataSource || '')}</p>
-      <div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-act="open">Open Smart Recommendations</button></div>`);
+      <div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-act="open">Open Spring Planner</button></div>`, 'get_phase1_recommendations');
     el.querySelector('[data-act="open"]').onclick = () => actions.showView('recommendations');
   }
 
@@ -147,13 +263,14 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
         <div class="tag ${o.requirementKind}">${esc(o.requirement)}</div>
         <div class="why">${esc((o.tradeoffs || []).join(' '))}</div>
         <div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-take="${esc(o.code)}">Use ${esc(o.code)}</button></div></li>`).join('');
-    const el = card(`<div class="hd"><span class="kind draft">Replace ${esc(result.replacing)}</span><span>others stay fixed</span></div><ul>${items}</ul>`);
+    const el = card(`<div class="hd"><span class="kind draft">Replace ${esc(result.replacing)}</span><span>others stay fixed</span></div><ul>${items}</ul>`, 'suggest_alternatives');
     el.querySelectorAll('[data-take]').forEach(btn => btn.onclick = () => {
       const out = actions.swap(result.replacing, btn.dataset.take);
       el.querySelectorAll('[data-take]').forEach(b => { b.disabled = true; });
       const ok = out && typeof out === 'object';
       notice(ok ? `Draft updated: ${result.replacing} → ${btn.dataset.take}. No seats held.` : String(out), ok ? '' : 'error');
       if (ok) { pendingEvents.push(`Student replaced ${result.replacing} with ${btn.dataset.take} in the draft using the card.`); draftCard(); }
+      save();
     });
   }
 
@@ -161,7 +278,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     const verb = { register: 'Review & register', drop: 'Review & drop', waitlist: result.leave ? 'Review & leave waitlist' : 'Review & join waitlist' }[result.action];
     const el = card(`<div class="hd"><span class="kind gated">Needs your confirmation</span></div>
       <p class="body">${esc(result.summary)}</p>
-      <div class="acts"><button type="button" class="btn btn-primary btn-sm" data-act="confirm">${esc(verb)}</button></div>`);
+      <div class="acts"><button type="button" class="btn btn-primary btn-sm" data-act="confirm">${esc(verb)}</button></div>`, 'confirm');
     el.querySelector('[data-act="confirm"]').onclick = (e) => confirmFlow(result, e.currentTarget);
   }
 
@@ -171,6 +288,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     notice(outcome.message, outcome.changed ? 'ok' : '');
     pendingEvents.push(`${outcome.changed ? 'Student confirmed' : 'No change'}: ${outcome.message}`);
     if (!outcome.changed) button.disabled = false;
+    save();
   }
 
   function springPlanCard(result) {
@@ -185,7 +303,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     const el = card(`<div class="hd"><span class="kind draft">Spring 2026–27 · plan 1 of ${result.plans.length}</span><span>${plan.totalCredits} credits · ${plan.coveredItems.length} audit items</span></div>
       ${notes}<ul>${rows}</ul>${warn}<p class="src">Real sections from the Spring snapshot. No seats held — register in Banner with the CRNs.</p>
       <div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-act="plans">See all plans</button>
-        <button type="button" class="btn btn-primary btn-sm" data-act="summary">Advisor summary</button></div>`);
+        <button type="button" class="btn btn-primary btn-sm" data-act="summary">Advisor summary</button></div>`, 'plan_spring_schedule');
     el.querySelector('[data-act="plans"]').onclick = () => actions.showPlanner();
     el.querySelector('[data-act="summary"]').onclick = () => actions.openSummary(0);
   }
@@ -193,7 +311,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
   function summaryCard(result) {
     const el = card(`<div class="hd"><span class="kind rec">Advisor meeting summary</span><span>${esc(result.includesPlan || '')}</span></div>
       <p class="body">${(result.questions || []).length} question${(result.questions || []).length === 1 ? '' : 's'} to ask, plus your audit progress${/Plan/.test(result.includesPlan || '') ? ' and Spring plan' : ''}. Print it or copy it as text.</p>
-      <div class="acts"><button type="button" class="btn btn-primary btn-sm" data-act="open">Open summary</button></div>`);
+      <div class="acts"><button type="button" class="btn btn-primary btn-sm" data-act="open">Open summary</button></div>`, 'prepare_advisor_summary');
     const planNo = Number((result.includesPlan || '').match(/Plan (\d)/)?.[1] || 1) - 1;
     el.querySelector('[data-act="open"]').onclick = () => actions.openSummary(planNo);
   }
@@ -239,18 +357,22 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     } finally { clearTimeout(timer); }
   }
 
-  async function runTools(blocks) {
+  async function runTools(blocks, used) {
     const results = [];
     for (const block of blocks) {
-      typing(TOOL_LABELS[block.name] || 'Working…');
+      used.push(block.name);
+      typing(`${F.stepLabel(block.name, 'running')}…`);
+      const done = stepStart(block.name);
       const handler = handlers[block.name];
       try {
         if (!handler) throw new Error(`Unknown tool ${block.name}.`);
         const result = await handler(block.input || {}, { channel: 'chat' });
+        done(!(result && typeof result === 'object' && result.error), F.stepSummary(block.name, result));
         renderToolCard(block.name, result);
         results.push({ type: 'tool_result', tool_use_id: block.id, content: typeof result === 'string' ? result : JSON.stringify(result) });
       } catch (err) {
         console.error(err);
+        done(false, err.message);
         results.push({ type: 'tool_result', tool_use_id: block.id, content: `Tool failed: ${err.message}`, is_error: true });
       }
     }
@@ -264,14 +386,24 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
     bubble('ai', await offlineReply(text));
   }
 
+  function finishTurn(used) {
+    closeSteps();
+    suggestions(F.followUps({ view: actions.getView(), tools: used, hasDraft: !!actions.getDraft(), hasSpringPlan: !!actions.hasSpringPlan?.() }));
+    save();
+  }
+
   async function ask(text) {
-    const clean = text.trim();
+    const clean = String(text || '').trim().slice(0, MAX_INPUT);
     if (!clean || busy) return;
     if (locked) { notice('The AI advisor has reached its demo usage limit and is paused.', 'error'); return; }
+    thread.querySelector('[data-welcome-chips]')?.remove();
+    thread.querySelectorAll('.advisor-chips.follow').forEach(el => el.remove());
+    lastQuestion = clean;
     bubble('user', clean);
-    input.value = '';
-    if (offline) { setBusy(true); try { await useOffline(clean); } finally { setBusy(false); input.focus(); } return; }
-    if (messages.length >= MAX_HISTORY) { notice('This conversation is getting long. Start a new conversation to keep going.', 'warn'); return; }
+    input.value = ''; autosize();
+    const used = [];
+    if (offline) { setBusy(true); try { await useOffline(clean); } finally { setBusy(false); finishTurn(used); input.focus(); } return; }
+    if (messages.length >= MAX_HISTORY) { notice('This conversation is getting long. Start a new conversation to keep going.', 'warn'); save(); return; }
 
     const gen = generation, checkpoint = messages.length, eventsBefore = pendingEvents;
     const content = [];
@@ -301,7 +433,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
             stopTyping(); notice('I stopped after several steps. Ask me to continue if you need more.', 'warn');
             break;
           }
-          const results = await runTools(toolCalls);
+          const results = await runTools(toolCalls, used);
           if (gen !== generation) return;
           messages.push({ role: 'user', content: results });
           typing('Thinking…');
@@ -330,6 +462,7 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
       if (gen === generation) {
         controller = null;
         setBusy(false);
+        finishTurn(used);
         if (!locked) input.focus();
       }
     }
@@ -338,27 +471,61 @@ export function createAdvisorChat({ endpoint = '/api/advisor', handlers, actions
   function reset() {
     generation++;
     controller?.abort('user');
-    controller = null; typingEl = null;
-    messages = []; pendingEvents = []; offline = false;
+    controller = null; typingEl = null; steps = null;
+    messages = []; transcript = []; pendingEvents = []; offline = false; lastQuestion = '';
+    storage(s => s.removeItem(CONVO_KEY));
     setBusy(false);
     thread.innerHTML = welcomeHtml;
-    wireChips();
+    refreshWelcome();
     if (locked) lock();
   }
 
-  function wireChips() {
-    thread.querySelectorAll('[data-advisor-prompt]').forEach(b => b.addEventListener('click', () => ask(b.dataset.advisorPrompt)));
+  // ---------- Input ----------
+  function autosize() {
+    input.style.height = 'auto';
+    input.style.height = `${input.scrollHeight + 2}px`;
+    input.style.overflowY = input.scrollHeight > input.clientHeight + 2 ? 'auto' : 'hidden';
+    const n = input.value.length;
+    if (counter) { counter.hidden = n < MAX_INPUT - 200; counter.textContent = `${n} / ${MAX_INPUT}`; }
   }
 
+  async function copyAnswer(turnEl, button) {
+    const text = turnEl.dataset.text || turnEl.querySelector('.txt').innerText;
+    try { await navigator.clipboard.writeText(text); button.textContent = 'Copied'; }
+    catch {
+      const range = document.createRange(); range.selectNodeContents(turnEl.querySelector('.txt'));
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      button.textContent = 'Selected — press ⌘C';
+    }
+    setTimeout(() => { button.textContent = 'Copy'; }, 1800);
+  }
+
+  thread.addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-advisor-prompt]');
+    if (chip) return ask(chip.dataset.advisorPrompt);
+    const code = e.target.closest('.code-link');
+    if (code) { if (!actions.focusCourse(code.dataset.code)) ask(`Tell me about ${code.dataset.code}.`); return; }
+    const copy = e.target.closest('[data-copy]');
+    if (copy) return copyAnswer(copy.closest('.advisor-turn'), copy);
+    if (e.target.closest('[data-again]') && lastQuestion) return ask(lastQuestion);
+  });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (busy) { controller?.abort('user'); return; }
     ask(input.value);
   });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!busy) form.requestSubmit(); } });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!busy) form.requestSubmit(); } });
+  input.addEventListener('input', autosize);
   $('advisorReset')?.addEventListener('click', reset);
-  wireChips();
+  restore();
+  refreshWelcome();
   if (locked) lock();
 
-  return { ask, reset, addEvent: (text) => pendingEvents.push(text) };
+  return {
+    ask, reset,
+    addEvent: (text) => pendingEvents.push(text),
+    // Called when the panel opens: a restored thread was laid out while hidden, so scroll it now.
+    refresh: () => { refreshWelcome(); scroll(); },
+    busy: () => busy,
+  };
 }

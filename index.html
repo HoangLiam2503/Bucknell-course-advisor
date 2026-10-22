@@ -8,7 +8,7 @@
 <script>try{const t=localStorage.getItem('bca-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,7 +25,7 @@
       <a data-view="schedule" href="#schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>My Schedule</a>
       <a data-view="audit" href="#audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 9L12 4 2 9l10 5 10-5z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/></svg>Degree Audit</a>
       <a data-view="transcript" href="#transcript"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15h6"/></svg>Transcripts</a>
-      <a data-view="recommendations" href="#recommendations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.4L18 9.2l-4.2 1.8L12 15.5 10.2 11 6 9.2l4.2-1.8L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>Smart Recommendations</a>
+      <a data-view="recommendations" href="#recommendations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Spring Planner</a>
     </div>
     <div class="rail-foot">
       <div class="who">
@@ -51,7 +51,7 @@
       <div class="topbar-actions">
         <button class="btn btn-ghost" id="resetBtn">Reset demo</button>
         <button type="button" class="btn btn-ghost icon-btn" id="themeBtn" aria-label="Switch to dark theme" title="Toggle theme"><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
-        <button class="btn btn-advisor" id="advisorBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4L18 8.6l-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6L12 3z"/><path d="M18.5 14l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z"/></svg>Ask AI Advisor</button>
+        <button class="btn btn-advisor" id="advisorBtn" aria-controls="advisorPanel" aria-expanded="false" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/></svg>Advisor<kbd class="kbd" aria-hidden="true">⌘K</kbd></button>
         <button class="btn btn-primary" id="planBtn">Plan my semester</button>
       </div>
     </div>
@@ -65,7 +65,7 @@
       </div>
       <ol class="steps">
         <li><b>Browse &amp; check eligibility</b>Every course explains why it is available, full, in conflict or blocked.</li>
-        <li><b>Draft a plan</b>“Plan my semester” or the AI advisor builds a draft — no seats are held.</li>
+        <li><b>Draft a plan</b>“Plan my semester” or the advisor builds a draft — no seats are held.</li>
         <li><b>Confirm each change</b>Nothing changes until you confirm. Real registration happens in Banner.</li>
       </ol>
     </div>
@@ -197,25 +197,20 @@
   </main>
 </div>
 
-<aside class="advisor-panel" id="advisorPanel" aria-label="AI academic advisor" aria-hidden="true">
+<aside class="advisor-panel" id="advisorPanel" aria-label="Academic advisor" aria-hidden="true">
   <div class="advisor-head">
-    <div class="advisor-mark">AI</div>
-    <div class="copy"><b>Ask AI Advisor</b><span>Powered by Gemini · drafts only, you confirm changes</span></div>
-    <button type="button" class="advisor-reset" id="advisorReset" aria-label="Start a new conversation" title="New conversation">↺</button>
-    <button type="button" class="advisor-close" id="advisorClose" aria-label="Close AI advisor">×</button>
+    <div class="advisor-mark" aria-hidden="true">A</div>
+    <div class="copy"><b>Advisor</b><span>Drafts only · you confirm changes</span></div>
+    <button type="button" class="advisor-reset" id="advisorReset" aria-label="Start a new conversation" title="New conversation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/></svg></button>
+    <button type="button" class="advisor-close" id="advisorClose" aria-label="Close advisor" title="Close (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <div class="advisor-thread" id="advisorThread" aria-live="polite">
-    <div class="advisor-msg ai">Hi Liam — tell me what you want from next semester in your own words. I’ll check your requirements, prerequisites, conflicts, workload and seats, then build a draft for you to review. I never register you — you confirm every change.</div>
-    <div class="advisor-chips">
-      <button type="button" class="advisor-chip" data-advisor-prompt="Plan my Spring 2026–27 semester: 4 courses including CSCI 204, nothing before 10am.">Plan my Spring</button>
-      <button type="button" class="advisor-chip" data-advisor-prompt="I'm meeting my advisor this week. Prepare a summary with questions to ask.">Advisor meeting prep</button>
-      <button type="button" class="advisor-chip" data-advisor-prompt="What degree requirements do I still have left?">Remaining requirements</button>
-      <button type="button" class="advisor-chip" data-advisor-prompt="Which official Spring 2026–27 courses should I consider, and why?">Spring recommendations</button>
-    </div>
+    <div class="advisor-turn ai welcome"><div class="who"><span>Advisor</span></div><div class="txt"><p>Hi Liam — tell me what you want from next semester in your own words. I check requirements, prerequisites, conflicts, workload and seats, then draft something for you to review.</p><p>I never register you. Every enrollment change waits for your click.</p></div></div>
+    <div class="advisor-chips" data-welcome-chips></div>
   </div>
   <form class="advisor-compose" id="advisorForm">
-    <div class="advisor-inputrow"><label class="sr-only" for="advisorInput">Message the AI advisor</label><textarea class="advisor-input" id="advisorInput" rows="1" maxlength="2000" placeholder="Ask about courses, requirements or your schedule…"></textarea><button class="advisor-send" id="advisorSend" aria-label="Send message">↑</button></div>
-    <div class="advisor-disclaimer">AI-generated advice using a demo profile, demo Fall catalog and a saved Spring 2026–27 snapshot — not live data. Messages are processed by Google Gemini (free tier) — don’t share personal information. Verify with your academic advisor. Nothing is registered without your confirmation.</div>
+    <div class="advisor-inputrow"><label class="sr-only" for="advisorInput">Message the advisor</label><textarea class="advisor-input" id="advisorInput" rows="1" maxlength="2000" placeholder="Ask about courses or your plan…"></textarea><button class="advisor-send" id="advisorSend" aria-label="Send message">Send</button></div>
+    <div class="advisor-foot"><span class="advisor-disclaimer">Gemini (free tier) on a demo profile, demo Fall catalog and saved Spring 2026–27 snapshot — not live data. Don’t share personal information; confirm decisions with your advisor.</span><span class="advisor-count" id="advisorCount" hidden></span></div>
   </form>
 </aside>
 
@@ -246,10 +241,14 @@
 <script src="phase1-recommender.js"></script>
 <script src="spring-planner.js"></script>
 <script src="advisor-tools.js"></script>
+<script src="advisor-format.js"></script>
 <script type="module">
 import { createAdvisorChat } from './advisor-chat.js';
-try { if (!('modelContext' in document)) { const { initializeWebMCPPolyfill } = await import('https://esm.sh/@mcp-b/webmcp-polyfill'); initializeWebMCPPolyfill(); } }
-catch (e) { console.warn('WebMCP polyfill unavailable; native support only.', e); }
+// The polyfill loads in the background so the portal (and its advisor shortcut) is usable at once.
+const webmcpReady = (async () => {
+  try { if (!('modelContext' in document)) { const { initializeWebMCPPolyfill } = await import('https://esm.sh/@mcp-b/webmcp-polyfill'); initializeWebMCPPolyfill(); } }
+  catch (e) { console.warn('WebMCP polyfill unavailable; native support only.', e); }
+})();
 
 const A = window.Advisor;
 const SEED = new Map(A.CATALOG.map(c => [c.code, { seats: c.seats, waitlist: c.waitlist }]));
@@ -257,6 +256,7 @@ const state = { profile: structuredClone(A.DEFAULT_PROFILE), registered: [], pro
 const $ = (id) => document.getElementById(id);
 const initials = (n) => n.replace(/^Prof\.\s*/, '').split(/\s+/).map(w => w[0]).slice(0, 2).join('');
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+let advisorChat=null; // set once the chat module is created at the end of this script
 
 // ---------- Degree audit snapshot + official Spring 2026–27 sections ----------
 const P1=window.Phase1Advisor;
@@ -318,10 +318,10 @@ function renderPhase1(args={}){
     const closes=item.closes.map(c=>`<span class="closes">${esc(c.item)}</span>`).join('');
     const reasons=item.reasons.filter(r=>!r.startsWith('Counts toward')).map(reason=>`<li>${esc(reason)}</li>`).join('');
     const cautions=item.cautions.map(caution=>`<li class="warn">${esc(caution)}</li>`).join('');
-    return `<article class="rec-course" id="phase1-${esc(item.code)}"><div class="rec-rank">${index+1}</div><div>
+    return `<article class="rec-course" id="phase1-${esc(AdvisorFormat.normCode(item.code))}" data-course="${esc(AdvisorFormat.normCode(item.code))}"><div class="rec-rank">${index+1}</div><div>
       <div class="head"><h3><code>${esc(item.code)}</code>${esc(item.title)}</h3><span class="status eligible">ELIGIBLE</span></div>
       <div class="meta">Section ${esc(section.Section)}${item.sectionCount>1?` (+${item.sectionCount-1} more)`:''} · ${esc(instructor)} · ${esc(meetingLabel(section))} · ${P1.availableSeats(section)} unreserved seats · ${section.Credit} credit</div>
-      ${closes?`<div class="closes-row">${closes}</div>`:''}<ul>${reasons}${cautions}</ul></div><div class="rec-score"><b>${item.score}</b><span>priority score</span></div></article>`;
+      ${closes?`<div class="closes-row">${closes}</div>`:''}<ul>${reasons}${cautions}</ul><button type="button" class="linkbtn ask" data-ask="${esc(`Explain ${item.code} section ${section.Section} for Spring 2026–27: its notes, restrictions and what it counts toward for me.`)}">Ask advisor about this section</button></div><div class="rec-score"><b>${item.score}</b><span>priority score</span></div></article>`;
   }).join('') : '<div class="card-body"><p class="empty">No eligible Spring sections close an open audit item.</p></div>';
   if(currentView==='audit') renderAudit();
   return result;
@@ -390,7 +390,7 @@ function renderSpringPlans(){
   const warns=p.warnings.length?p.warnings.map(w=>`<li class="warn">${esc(w.text)}</li>`).join(''):'<li>No schedule warnings.</li>';
   $('plannerOut').innerHTML=`${notes}${tabs}<div class="pl-grid"><div>${weekGrid(p)}</div><div>
     <div class="table-scroll"><table class="pl-table"><thead><tr><th>Course</th><th>Part</th><th>CRN</th><th>Meets</th><th>Seats</th><th>Counts toward</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="pl-acts"><button type="button" class="btn btn-ghost btn-sm" id="plCopy">Copy CRNs</button><button type="button" class="btn btn-primary btn-sm" id="plSummary">Advisor meeting summary</button></div></div></div>
+    <div class="pl-acts"><button type="button" class="btn btn-ghost btn-sm" id="plCopy">Copy CRNs</button><button type="button" class="btn btn-ghost btn-sm" data-ask="${esc(`Review Spring plan ${spring.active+1} with me: what each course closes, the main warnings, and whether plan B is better anywhere.`)}">Ask advisor about plan ${spring.active+1}</button><button type="button" class="btn btn-primary btn-sm" id="plSummary">Advisor meeting summary</button></div></div></div>
     <div class="pl-sub">Plan B — swaps that keep the rest of this plan</div><ul class="pl-list">${planB}</ul>
     <div class="pl-sub">Check before registering</div><ul class="pl-list">${warns}</ul>
     <p class="load-note">${p.totalCredits} credits · ${p.coveredItems.length} open audit items: ${esc(p.coveredItems.join('; '))}. Seats and times come from the Spring 2026–27 snapshot; register in Banner with these CRNs.</p>`;
@@ -495,7 +495,7 @@ function renderCatalog(){
       ? `<button class="btn btn-ghost btn-sm" data-leavewl="${c.code}">Leave waitlist (#${c.waitlistPosition})</button>`
       : `<button class="btn btn-ghost btn-sm" data-joinwl="${c.code}">Join waitlist</button>`;
     else action = `<button class="btn btn-primary btn-sm" data-register="${c.code}" ${r.eligible?'':'disabled'}>Register</button>`;
-    return `<div class="course" id="course-${c.code}">
+    return `<div class="course" id="course-${c.code}" data-course="${AdvisorFormat.normCode(c.code)}">
       <div class="c-top">
         <div style="min-width:0">
           <div class="c-code">${c.code}</div>
@@ -509,7 +509,7 @@ function renderCatalog(){
         <div class="enroll-row"><span>Enrollment</span><b>${filled} of ${c.capacity} seats filled${c.seats===0&&c.waitlist?` · ${c.waitlist} on waitlist`:''}</b></div>
         <div class="ebar"><i class="${bar}" style="width:${pct}%"></i></div>
       </div>
-      <div class="c-actions">${action}<button class="linkbtn" data-why="${c.code}">Why this status?</button></div>
+      <div class="c-actions">${action}<button class="linkbtn" data-why="${c.code}">Why this status?</button><button type="button" class="linkbtn ask" data-ask="Should I take ${c.code} ${esc(c.title)} this term? Check it against my requirements and current schedule.">Ask advisor</button></div>
       <div class="why" id="why-${c.code}"><ul>${[...r.blockers,...r.reasons].map(x=>`<li>${x}</li>`).join('')}</ul></div>
     </div>`;
   }).join('');
@@ -523,7 +523,7 @@ function renderPlan(){
     ? state.registered.map(c=>`<div class="reg"><div class="reg-ic">${c.code}</div>
         <div class="reg-b"><div class="t">${c.title}</div><div class="m">${c.instructor} · ${A.describeSchedule(c)} · ${c.room}</div></div>
         <button class="btn btn-danger btn-sm" data-drop="${c.code}">Drop</button></div>`).join('')
-    : '<p class="empty">No courses registered. Browse the catalog or ask your AI advisor to build a plan.</p>';
+    : '<p class="empty">No courses registered. Browse the catalog or ask the advisor to build a plan.</p>';
   renderWaitlists(); renderTimetable(); renderWeek();
 }
 
@@ -644,7 +644,8 @@ function renderAudit(){
       const note=it.status==='not-met'?courseItemNote(it):'';
       const detail=it.status!=='not-met'?'':note?esc(note):opts.length?`Spring 2026–27: ${opts.slice(0,4).map(o=>`<code>${esc(o.code)}</code>`).join(' ')}${opts.length>4?` +${opts.length-4} more`:''}`:'No eligible Spring 2026–27 section in the snapshot.';
       const chip=it.status==='met'?['complete',it.simulated?'MET (SIMULATED)':'MET']:it.status==='not-met'?['remaining','NOT MET']:['in-progress','INFO'];
-      return `<div class="rq"><div><div class="n">${esc(it.label)}</div>${detail?`<div class="d">${detail}</div>`:''}</div><span class="st ${chip[0]}">${chip[1]}</span></div>`;
+      const ask=it.status==='not-met'?`<button type="button" class="linkbtn ask" data-ask="${esc(`How can I close the “${it.label}” item from my degree audit in Spring 2026–27?`)}">How do I close this?</button>`:'';
+      return `<div class="rq"><div><div class="n">${esc(it.label)}</div>${detail?`<div class="d">${detail}</div>`:''}${ask}</div><span class="st ${chip[0]}">${chip[1]}</span></div>`;
     }).join('')}</div>`;
   }).join('');
 }
@@ -669,7 +670,7 @@ const VIEW_META={
   schedule:['Fall 2026 · Week view','My Schedule'],
   audit:['Computer Science Major (B.S.) · audit snapshot','Degree Audit'],
   transcript:['Unofficial · For advising use only','Transcript'],
-  recommendations:['Spring 2026–27 · based on your degree audit','Smart Recommendations'],
+  recommendations:['Spring 2026–27 · based on your degree audit','Spring Planner'],
 };
 function showView(v){
   if(!VIEW_META[v]) v='registration';
@@ -685,6 +686,7 @@ function showView(v){
   $('planBtn').style.display = (v==='audit'||v==='transcript'||v==='recommendations')?'none':'';
   if(location.hash!=='#'+v) history.replaceState(null,'','#'+v);
   renderTimetable(); renderWeek(); if(v==='transcript') renderTranscript(); if(v==='audit') renderAudit(); if(v==='recommendations') loadPhase1();
+  advisorChat?.refresh();
 }
 document.querySelector('.nav').addEventListener('click',e=>{ const a=e.target.closest('[data-view]'); if(!a) return; e.preventDefault(); showView(a.dataset.view); });
 window.addEventListener('hashchange',()=>showView(location.hash.slice(1)));
@@ -702,7 +704,7 @@ function log(actor,msg){
   el.innerHTML=`<span class="tg ${actor==='agent'?'agent':'you'}">${actor==='agent'?'ADVISOR':'YOU'}</span>${msg}<time>${t}</time>`;
   $('log').prepend(el);
 }
-$('log').innerHTML='<p class="empty">No activity yet. Browse courses or ask your AI advisor to plan the semester.</p>';
+$('log').innerHTML='<p class="empty">No activity yet. Browse courses or ask the advisor to plan the semester.</p>';
 
 // ---------- Confirmation ----------
 let pending=null;
@@ -832,16 +834,37 @@ function resetDemo(){
   A.CATALOG.forEach(c=>{const s=SEED.get(c.code); c.seats=s.seats; c.waitlist=s.waitlist; c.onWaitlist=false; c.waitlistPosition=null;});
   state.profile=structuredClone(A.DEFAULT_PROFILE); state.registered=[]; state.proposal=null; state.alts=null; state.activeDept=null;
   $('q').value=''; $('onlyEligible').checked=false;
-  $('log').innerHTML='<p class="empty">No activity yet. Browse courses or ask your AI advisor to plan the semester.</p>';
+  $('log').innerHTML='<p class="empty">No activity yet. Browse courses or ask the advisor to plan the semester.</p>';
   renderAll();
 }
 
 // ---------- In-portal AI advisor ----------
-function setAdvisorOpen(open){
-  $('advisorPanel').classList.toggle('show',open);
-  $('advisorPanel').setAttribute('aria-hidden',String(!open));
-  if(open) setTimeout(()=>$('advisorInput').focus(),0);
+// At 1280px and wider the panel docks beside the page (body.advisor-open adds room), so the
+// student can watch the page the advisor is changing; narrower screens get an overlay sheet.
+function setAdvisorOpen(open,{restoreFocus=true}={}){
+  const panel=$('advisorPanel'), wasOpen=panel.classList.contains('show');
+  panel.classList.toggle('show',open);
+  panel.setAttribute('aria-hidden',String(!open));
+  panel.inert=!open;
+  document.body.classList.toggle('advisor-open',open);
+  $('advisorBtn').setAttribute('aria-expanded',String(open));
+  if(open){ advisorChat?.refresh(); setTimeout(()=>$('advisorInput').focus(),0); }
+  else if(wasOpen&&restoreFocus&&panel.contains(document.activeElement)) $('advisorBtn').focus();
 }
+const narrowAdvisor=matchMedia('(max-width: 640px)');
+/** Brings a course row into view for a code link in the chat; false when the code is not on any page. */
+function focusCourse(code){
+  const key=AdvisorFormat.normCode(code);
+  const demo=A.CATALOG.find(c=>AdvisorFormat.normCode(c.code)===key);
+  if(demo&&currentView!=='catalog'&&currentView!=='registration') showView('catalog');
+  if(!demo&&!document.querySelector(`[data-course="${key}"]`)&&currentView!=='recommendations') return false;
+  if(!demo&&currentView!=='recommendations') showView('recommendations');
+  const el=document.querySelector(`[data-course="${key}"]`); if(!el) return false;
+  if(narrowAdvisor.matches) setAdvisorOpen(false,{restoreFocus:false});
+  el.scrollIntoView({block:'center',behavior:'smooth'}); flash(el);
+  return true;
+}
+function askAdvisor(prompt){ setAdvisorOpen(true); if(!advisorChat?.busy()) advisorChat?.ask(prompt); }
 
 function parseAdvisorPlan(prompt){
   const lower=prompt.toLowerCase();
@@ -880,7 +903,7 @@ async function handleAdvisorPrompt(prompt){
   if(/official|spring|recommend|đề xuất|gợi ý/.test(lower)){
     await loadPhase1(); const result=renderPhase1(); showView('recommendations');
     const top=result.recommendations.filter(r=>r.eligible).slice(0,5);
-    return `I opened Smart Recommendations using the official Spring snapshot. Top options for your open audit items:\n${top.map((r,i)=>`${i+1}. ${r.code} — ${r.title}: ${r.closes.map(c=>c.item).join(' + ')}`).join('\n')}`;
+    return `I opened the Spring Planner using the official Spring snapshot. Top options for your open audit items:\n${top.map((r,i)=>`${i+1}. ${r.code} — ${r.title}: ${r.closes.map(c=>c.item).join(' + ')}`).join('\n')}`;
   }
   if(/schedule|plan|semester|lịch|môn/.test(lower)){
     const constraints=parseAdvisorPlan(prompt), result=doBuildSchedule(constraints,'agent');
@@ -922,6 +945,12 @@ $('resetBtn').addEventListener('click',resetDemo);
 $('planBtn').addEventListener('click',()=>doBuildSchedule({},'human'));
 $('advisorBtn').addEventListener('click',()=>setAdvisorOpen(true));
 $('advisorClose').addEventListener('click',()=>setAdvisorOpen(false));
+$('advisorPanel').inert=true;
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&!e.altKey&&!e.shiftKey&&e.key.toLowerCase()==='k'){ e.preventDefault(); setAdvisorOpen(!$('advisorPanel').classList.contains('show')); return; }
+  // Esc closes the panel only when nothing modal is open over it.
+  if(e.key==='Escape'&&$('advisorPanel').contains(document.activeElement)&&!document.querySelector('.ov.show')) setAdvisorOpen(false);
+});
 $('deptbar').addEventListener('click',e=>{const b=e.target.closest('[data-dept]'); if(!b)return;
   state.activeDept=state.activeDept===b.dataset.dept?null:b.dataset.dept; renderDepts(); renderCatalog();});
 document.addEventListener('click',e=>{
@@ -933,6 +962,7 @@ document.addEventListener('click',e=>{
   const ta=e.target.closest('[data-takealt]'); if(ta) return doSwap(state.alts.out.code,ta.dataset.takealt,'human');
   const da=e.target.closest('[data-dropalt]'); if(da) return doSwap(da.dataset.dropalt,null,'human');
   const w=e.target.closest('[data-why]'); if(w) $('why-'+w.dataset.why).classList.toggle('show');
+  const ask=e.target.closest('[data-ask]'); if(ask) askAdvisor(ask.dataset.ask);
 });
 renderAll();
 showView(location.hash.slice(1)||'registration');
@@ -1093,6 +1123,7 @@ const TOOL_HANDLERS={
 };
 
 async function registerTools(){
+  await webmcpReady;
   if(!document.modelContext){ $('mcpText').textContent='WebMCP is not available here. Open this page in the ChatGPT desktop app’s built-in browser, or Chrome with chrome://flags/#enable-webmcp-testing enabled.'; return; }
   const mc=document.modelContext;
   try{
@@ -1108,7 +1139,7 @@ async function registerTools(){
 registerTools();
 
 // ---------- In-portal AI advisor (Gemini via /api/advisor) ----------
-createAdvisorChat({
+advisorChat=createAdvisorChat({
   handlers:TOOL_HANDLERS,
   offlineReply:handleAdvisorPrompt,
   getContext:()=>{
@@ -1118,6 +1149,9 @@ createAdvisorChat({
   },
   actions:{
     showView,
+    getView:()=>currentView,
+    focusCourse,
+    hasSpringPlan:()=>!!spring.result?.plans?.length,
     getDraft:draftSummary,
     openSummary:i=>openAdvisorSummary(i),
     showPlanner:()=>{showView('recommendations'); $('plannerCard').scrollIntoView({block:'start',behavior:'smooth'});},

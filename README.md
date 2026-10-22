@@ -2,7 +2,7 @@
 
 A university course-registration portal where the AI in your browser acts as an **academic advisor that can actually do things**: read your profile, search the catalog, check prerequisites and seat availability, build a conflict-free schedule from a plain-language request, and register you — with every enrollment change gated behind a confirmation you click yourself.
 
-Students do not need ChatGPT to use the core experience. The portal includes an **Ask AI Advisor** panel powered by Google Gemini: students ask in plain language, the advisor calls the same fourteen portal tools that WebMCP exposes, explains every recommendation (requirement, prerequisites, conflicts, credits, workload, seats, warnings) and builds a draft schedule. It never registers anyone — enrollment changes appear as a card the student must confirm. WebMCP remains an additional client channel rather than the only interface.
+Students do not need ChatGPT to use the core experience. The portal includes an **Advisor** panel (⌘K / Ctrl+K) powered by Google Gemini: students ask in plain language, the advisor calls the same fourteen portal tools that WebMCP exposes, explains every recommendation (requirement, prerequisites, conflicts, credits, workload, seats, warnings) and builds a draft schedule. It never registers anyone — enrollment changes appear as a card the student must confirm. WebMCP remains an additional client channel rather than the only interface.
 
 Built for the **OpenAI WebMCP Challenge** (webmcp.devpost.com).
 
@@ -56,10 +56,12 @@ browser: advisor-chat.js ──POST {messages}──▶ api/advisor.js ──▶
    └ sends tool_result back, up to 6 rounds per question
 ```
 
-- **Separation:** data and rules in `engine.js` / `phase1-recommender.js` / `data/`; tool contract in `advisor-tools.js`; handlers and UI in `index.html`; chat loop and cards in `advisor-chat.js`; LLM call in `api/advisor.js`.
+- **Separation:** data and rules in `engine.js` / `phase1-recommender.js` / `data/`; tool contract in `advisor-tools.js`; handlers and UI in `index.html`; chat loop and cards in `advisor-chat.js`; answer formatting, step labels and suggested follow-ups in `advisor-format.js` (pure, tested by `test-advisor-format.js`); LLM call in `api/advisor.js`.
 - **Guardrails:** the advisor only drafts. `register_course`, `drop_course` and `join_waitlist` render a confirmation card in the chat; the portal re-checks eligibility and opens the confirm dialog only when the student clicks it.
 - **Data honesty:** tool results carry a `dataSource` label (demo Fall 2026 catalog vs. official Spring 2026–27 snapshot, not live) and the system prompt forbids presenting either as real-time.
 - **Fallback:** if `/api/advisor` is unreachable or not configured, the panel says so and uses the basic offline (rule-based) assistant.
+- **Panel:** at 1280px and wider the panel docks beside the page so the student watches what the advisor changes; narrower screens get an overlay sheet, phones a full-screen sheet. Each question shows a collapsible list of the tools the advisor ran (✓ / ✗ with a short result), course codes in answers jump to the course on the page, answers can be copied or asked again, and follow-up suggestions depend on the current page and the tools just used. "Ask advisor" links on catalog rows, Spring recommendations, open audit items and Spring plans open the panel with the question filled in.
+- **Persistence:** the conversation is kept in `sessionStorage` (`advisorConvo`) so a reload does not lose it. Demo registration state is not kept, so earlier cards are shown as stale and the next question tells the model the page was reset.
 
 ### Configuration (Vercel environment variables)
 
@@ -108,21 +110,22 @@ The status line at the bottom of the page reports whether WebMCP is available. I
 
 ## Deploy
 
-Deploy to Vercel (`vercel` for a preview, `vercel --prod` for production) after setting `GEMINI_API_KEY`. The static portal alone still works on any static host (Netlify Drop, Cloudflare Pages) — the advisor then runs in offline mode. Keep `styles.css`, `engine.js`, `phase1-recommender.js`, `spring-planner.js`, `advisor-tools.js`, `advisor-chat.js` and `data/` beside `index.html`.
+Deploy to Vercel (`vercel` for a preview, `vercel --prod` for production) after setting `GEMINI_API_KEY`. The static portal alone still works on any static host (Netlify Drop, Cloudflare Pages) — the advisor then runs in offline mode. Keep `styles.css`, `engine.js`, `phase1-recommender.js`, `spring-planner.js`, `advisor-tools.js`, `advisor-format.js`, `advisor-chat.js` and `data/` beside `index.html`.
 
 ## Pages
 
-Registration (catalog + plan side by side), Course Catalog (full width), My Schedule (week grid + day list), Degree Audit, Transcript, and Smart Recommendations (the official-data Phase 1 sandbox). Navigation is hash-based (`#audit`, `#recommendations`, …) so the agent can send the student to a page by calling the matching tool.
+Registration (catalog + plan side by side), Course Catalog (full width), My Schedule (week grid + day list), Degree Audit, Transcript, and Spring Planner (the official-data Phase 1 sandbox; hash `#recommendations`). Navigation is hash-based (`#audit`, `#recommendations`, …) so the agent can send the student to a page by calling the matching tool.
 
 ## Design system
 
 All styling lives in `styles.css` (no build step): tokens → base → shell → components → views → planner → advisor → modal → motion → print.
 
-- **Type:** Geist for UI, Geist Mono for course codes and CRNs, Source Serif 4 for page titles.
-- **Color:** neutral surfaces with Bucknell orange for primary actions and active states and deep blue for the brand mark and drafts. Text colors meet WCAG AA (4.5:1) in both themes; `--orange` is for fills, `--orange-ink` for orange text.
+- **Look — a registrar's ledger:** warm paper surfaces with a faint grain, ink text, hairline and double rules instead of floating shadowed cards, numbered section heads (01, 02…), a ruled totals strip instead of stat cards, and square mono "stamps" for statuses.
+- **Type:** Geist for UI, Geist Mono for course codes, CRNs and labels, Source Serif 4 for page and section titles, course titles and the advisor's replies.
+- **Color:** Bucknell orange for primary actions and active states, deep blue for the brand mark, drafts and the advisor. Text colors meet WCAG AA (4.5:1) in both themes; `--orange` is for fills, `--orange-ink` for orange text, `--rule` for the heavier ledger lines.
 - **Token names** (`--bg`, `--panel`, `--text-3`, `--orange`, `--blue`, …) are also used by inline styles that `index.html` generates — change values, not names.
 - **Themes:** light by default, dark via `prefers-color-scheme`, and a toggle in the header that remembers the choice in `localStorage` (`bca-theme`).
-- **Responsive:** below 900px the sidebar becomes a drawer opened from the top bar; wide tables scroll horizontally inside their card. Motion is limited to a short entrance per page, hover/press feedback and modal transitions, and is disabled under `prefers-reduced-motion`.
+- **Responsive:** below 900px the sidebar becomes a drawer opened from the top bar; wide tables scroll horizontally inside their card. `.main` is a size container, so its grids also collapse when the docked advisor narrows the page. Motion is limited to a short entrance per page, hover/press feedback and modal transitions, and is disabled under `prefers-reduced-motion`.
 - The Registration page is labeled as a practice sandbox: the Fall catalog is sample data and real Spring registration happens in Banner with the CRNs from the planner.
 
 ## Data
@@ -131,7 +134,7 @@ The student's transcript (16 completed courses across four terms — GPA and cre
 
 ### Degree audit snapshot (drives requirements and recommendations)
 
-`data/degree-audit-snapshot.json` transcribes a real Computer Science B.S. *Area Requirement Summary* (Computer Science Major, Major-related Courses, University Writing, Foundational Experiences, Disciplinary Exploration, Academic Electives) with each item's Met / Not Met status. The Degree Audit page, Smart Recommendations, `get_degree_audit` and `get_phase1_recommendations` all read it.
+`data/degree-audit-snapshot.json` transcribes a real Computer Science B.S. *Area Requirement Summary* (Computer Science Major, Major-related Courses, University Writing, Foundational Experiences, Disciplinary Exploration, Academic Electives) with each item's Met / Not Met status. The Degree Audit page, the Spring Planner, `get_degree_audit` and `get_phase1_recommendations` all read it.
 
 `recommendForAudit` in `phase1-recommender.js` ranks real Spring 2026–27 sections by the open audit items they would count toward: named major courses first, then courses whose designations (W2, CCIP, LBSC, RPI, NPJ, GBCC, SLSC, ARHC, NSMC) close several open items. One course fills at most one slot per designation within an area (e.g. one of the two W2 items), Social Science must be an Arts & Sciences course, and the natural science item excludes CSCI and MATH. Results carry cautions for missing or unverified prerequisites, instructor permission, section footnotes and double counting.
 
@@ -146,7 +149,7 @@ The audit is a snapshot, not a live audit; production would read it from the deg
 - **Explanations:** `explainSection` returns a section's times, required labs/recitations, designation codes with meanings, reserved vs unreserved seats, the footnote with flags, and the audit items it counts toward; the advisor turns it into plain language.
 - **Advisor summary:** a printable page (audit progress, chosen plan with CRNs, plan B, things to check, questions to ask) with Print / Save PDF and Copy as text.
 
-The planner card is on Smart Recommendations; the advisor uses `plan_spring_schedule`, `explain_section` and `prepare_advisor_summary`. Plans hold no seats — Spring registration happens in Banner with the CRNs.
+The planner card is on the Spring Planner page; the advisor uses `plan_spring_schedule`, `explain_section` and `prepare_advisor_summary`. Plans hold no seats — Spring registration happens in Banner with the CRNs.
 
 ### Phase 1: official 2026–27 Bucknell data
 
