@@ -606,8 +606,8 @@ table.tr tr:last-child td{border-bottom:none;}
 .advisor-send:hover:not(:disabled){background:var(--accent-hover);}
 .advisor-send:disabled{opacity:.45;cursor:not-allowed;}
 .advisor-send.stop{background:var(--panel);color:var(--text);border:1px solid var(--line);}
-.advisor-foot{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;margin-top:8px;}
-.advisor-disclaimer{font-size:10.5px;color:var(--text-3);line-height:1.45;}
+.advisor-foot{display:flex;justify-content:flex-end;margin-top:6px;}
+.advisor-foot:has(.advisor-count[hidden]){display:none;}
 .advisor-count{font-family:var(--font-mono);font-size:10.5px;color:var(--amber);white-space:nowrap;}
 .advisor-notice{align-self:stretch;font-size:12px;line-height:1.45;color:var(--text-2);padding:7px 10px;border-radius:var(--radius-sm);border:1px dashed var(--line);}
 .advisor-notice.warn{border:1px solid var(--amber-line);color:var(--amber);background:var(--amber-bg);}

@@ -33,7 +33,6 @@
         <div class="avatar" id="avInit">JR</div>
         <div><div class="n" id="railName">—</div><div class="s" id="railMajor">—</div></div>
       </div>
-      <p class="rail-note">Demo profile and sample Fall catalog. Spring sections and the degree audit are saved snapshots, not live data.</p>
     </div>
   </nav>
   <div class="rail-backdrop" id="railBackdrop" aria-hidden="true"></div>
@@ -59,17 +58,6 @@
 
     <!-- Registration view -->
     <section class="view on" id="view-registration">
-    <div class="sandbox" role="note" aria-label="About this page">
-      <div class="sandbox-top">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>
-        <div><b>Practice sandbox · Fall 2026 sample catalog</b><p>Register, drop and waitlist actions here only change this demo — nothing is sent to Bucknell. For Spring 2026–27, build a plan from real sections and register in Banner with its CRNs. <a href="#recommendations">Open the Spring planner →</a></p></div>
-      </div>
-      <ol class="steps">
-        <li><b>Browse &amp; check eligibility</b>Every course explains why it is available, full, in conflict or blocked.</li>
-        <li><b>Draft a plan</b>“Plan my semester” or the advisor builds a draft — no seats are held.</li>
-        <li><b>Confirm each change</b>Nothing changes until you confirm. Real registration happens in Banner.</li>
-      </ol>
-    </div>
     <div class="stats" id="stats"></div>
 
     <div class="cols">
@@ -144,10 +132,6 @@
 
     <!-- Phase 1: official Bucknell 2026–27 data -->
     <section class="view" id="view-recommendations">
-      <div class="official-note">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>
-        <div><b>Based on your degree audit · official Spring 2026–27 sections</b>Requirement status comes from your Area Requirement Summary (snapshot). Sections, designations, footnotes and seats come from Bucknell’s public Course Information feed for Spring 2026–27 (saved snapshot, not live). Courses that close several open items rank higher.</div>
-      </div>
       <div class="card" style="margin-bottom:18px">
         <div class="card-head"><h2>Test recommendation signals</h2><span class="eyebrow" id="phase1Source">Loading official snapshot…</span></div>
         <div class="card-body">
@@ -211,7 +195,7 @@
   </div>
   <form class="advisor-compose" id="advisorForm">
     <div class="advisor-inputrow"><label class="sr-only" for="advisorInput">Message the advisor</label><textarea class="advisor-input" id="advisorInput" rows="1" maxlength="2000" placeholder="Ask about courses or your plan…"></textarea><button class="advisor-send" id="advisorSend" aria-label="Send message">Send</button></div>
-    <div class="advisor-foot"><span class="advisor-disclaimer">Gemini (free tier) on a demo profile, demo Fall catalog and saved Spring 2026–27 snapshot — not live data. Don’t share personal information; confirm decisions with your advisor.</span><span class="advisor-count" id="advisorCount" hidden></span></div>
+    <div class="advisor-foot"><span class="advisor-count" id="advisorCount" hidden></span></div>
   </form>
 </aside>
 
